@@ -35,7 +35,7 @@ def seed(db: Session) -> None:
     for name, code in DEFAULT_SUBJECTS:
         if not db.query(Subject).filter(Subject.code == code).first():
             db.add(Subject(name=name, code=code))
-    email = os.getenv("ADMIN_EMAIL", "admin@school.local")
+    email = os.getenv("ADMIN_EMAIL", "admin@school.edu")
     password = os.getenv("ADMIN_PASSWORD", "Admin123!")
     if not db.query(User).filter(User.email == email).first():
         db.add(User(email=email, hashed_password=hash_password(password), role=UserRole.ADMIN, is_active=True))

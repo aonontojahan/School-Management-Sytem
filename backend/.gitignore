@@ -6,6 +6,4 @@ venv/
 !.env.example
 *.db
 *.db-journal
-alembic/versions/*.py
-!alembic/versions/.gitkeep
 .pytest_cache/

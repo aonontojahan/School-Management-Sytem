@@ -36,7 +36,7 @@ export function Login() {
         <button disabled={isSubmitting} className="bg-black text-white w-full py-2 rounded">
           {isSubmitting ? "Signing in…" : "Login"}
         </button>
-        <p className="text-xs text-gray-500">Seeded admin: admin@school.local / Admin123!</p>
+        <p className="text-xs text-gray-500">Seeded admin: admin@school.edu / Admin123!</p>
       </form>
     </div>
   );

@@ -11,6 +11,7 @@ from app.core.security import hash_password, verify_password  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.session import engine  # noqa: E402
 from app.main import app  # noqa: E402
+from app.schemas.auth import LoginIn  # noqa: E402
 
 
 def test_password_roundtrip():
@@ -24,3 +25,8 @@ def test_health():
     r = c.get("/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+
+
+def test_seeded_admin_email_passes_login_schema():
+    # Regression: seed default must satisfy EmailStr (`.local` was rejected).
+    assert LoginIn(email="admin@school.edu", password="Admin123!").email == "admin@school.edu"
