@@ -202,3 +202,126 @@ def class_attendance(db: Session = Depends(get_db)):
         })
 
     return result
+
+
+@router.get("/student", dependencies=[Depends(get_current_user)])
+def student_dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Student dashboard: profile, attendance, upcoming exams, recent assignments."""
+    from app.models.assignment import AssignmentSubmission
+
+    student = db.query(StudentProfile).filter(StudentProfile.user_id == user.id).first()
+    if not student:
+        return {"error": "Student profile not found"}
+
+    # Attendance summary
+    total_attendance = db.query(func.count(Attendance.id)).filter(Attendance.student_id == student.id).scalar() or 0
+    present_days = db.query(func.count(Attendance.id)).filter(
+        and_(Attendance.student_id == student.id, Attendance.status == AttendanceStatus.PRESENT)
+    ).scalar() or 0
+    attendance_rate = round((present_days / total_attendance) * 100, 1) if total_attendance > 0 else 0
+
+    # Recent attendance (last 7)
+    recent_attendance = (
+        db.query(Attendance)
+        .filter(Attendance.student_id == student.id)
+        .order_by(Attendance.date.desc())
+        .limit(7)
+        .all()
+    )
+
+    # Upcoming exams for student's class
+    today = date.today()
+    upcoming_exams = []
+    if student.class_id:
+        upcoming_exams = (
+            db.query(Exam)
+            .filter(Exam.class_id == student.class_id, Exam.end_date >= today)
+            .order_by(Exam.start_date)
+            .limit(5)
+            .all()
+        )
+
+    # Recent assignments for student's class
+    recent_assignments = []
+    if student.class_id:
+        recent_assignments = (
+            db.query(Assignment)
+            .filter(Assignment.class_id == student.class_id)
+            .order_by(Assignment.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
+    # Class info
+    cls = db.get(SchoolClass, student.class_id) if student.class_id else None
+    sec = db.get(Section, student.section_id) if student.section_id else None
+
+    # Subjects for student's class
+    subjects = []
+    if cls:
+        subjects = [{"id": s.id, "name": s.name, "code": s.code} for s in cls.subjects]
+
+    return {
+        "profile": {
+            "id": student.id,
+            "student_code": student.student_code,
+            "first_name": student.first_name,
+            "last_name": student.last_name,
+            "email": student.email,
+            "phone": student.phone,
+            "date_of_birth": str(student.date_of_birth) if student.date_of_birth else None,
+            "gender": student.gender.value if student.gender else None,
+            "address": student.address,
+            "admission_date": str(student.admission_date) if student.admission_date else None,
+            "roll_number": student.roll_number,
+            "division": student.division,
+            "guardian_name": student.guardian_name,
+            "guardian_phone": student.guardian_phone,
+            "status": student.status.value,
+        },
+        "class": {
+            "id": cls.id if cls else None,
+            "name": cls.name if cls else None,
+            "code": cls.code if cls else None,
+        } if cls else None,
+        "section": {
+            "id": sec.id if sec else None,
+            "name": sec.name if sec else None,
+        } if sec else None,
+        "subjects": subjects,
+        "attendance": {
+            "total_days": total_attendance,
+            "present_days": present_days,
+            "absent_days": total_attendance - present_days,
+            "rate": attendance_rate,
+            "recent": [
+                {
+                    "date": str(a.date),
+                    "status": a.status.value,
+                    "period": a.period,
+                }
+                for a in recent_attendance
+            ],
+        },
+        "upcoming_exams": [
+            {
+                "id": e.id,
+                "name": e.name,
+                "exam_type": e.exam_type.value,
+                "start_date": str(e.start_date) if e.start_date else None,
+                "end_date": str(e.end_date) if e.end_date else None,
+                "total_marks": e.total_marks,
+            }
+            for e in upcoming_exams
+        ],
+        "recent_assignments": [
+            {
+                "id": a.id,
+                "title": a.title,
+                "description": a.description,
+                "due_date": str(a.due_date) if a.due_date else None,
+                "subject_id": a.subject_id,
+            }
+            for a in recent_assignments
+        ],
+    }
