@@ -172,24 +172,21 @@ def monthly_attendance(db: Session = Depends(get_db)):
 
 @router.get("/class-attendance", dependencies=[Depends(require_admin)])
 def class_attendance(db: Session = Depends(get_db)):
-    """Current month class-wise attendance breakdown."""
+    """Today's class-wise attendance breakdown for all classes (5-9)."""
     today = date.today()
-    start = date(today.year, today.month, 1)
-    end = today
 
     classes = db.query(SchoolClass).order_by(SchoolClass.name).all()
     result = []
 
     for cls in classes:
         total = db.query(func.count(Attendance.id)).filter(
-            and_(Attendance.class_id == cls.id, Attendance.date >= start, Attendance.date <= end)
+            and_(Attendance.class_id == cls.id, Attendance.date == today)
         ).scalar() or 0
 
         present = db.query(func.count(Attendance.id)).filter(
             and_(
                 Attendance.class_id == cls.id,
-                Attendance.date >= start,
-                Attendance.date <= end,
+                Attendance.date == today,
                 Attendance.status == AttendanceStatus.PRESENT,
             )
         ).scalar() or 0

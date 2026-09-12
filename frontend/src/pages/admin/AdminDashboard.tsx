@@ -159,7 +159,7 @@ function ClassAttendanceBarChart({ data }: { data: ClassAttendance[] }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-slate-700">Class-wise Attendance (This Month)</h3>
+        <h3 className="text-sm font-bold text-slate-700">Class-wise Attendance (Today)</h3>
         <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Present</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-400" /> Absent</span>
