@@ -38,3 +38,7 @@ class PasswordResetIn(BaseModel):
     """Admin-driven reset: no current password required (RBAC-guarded)."""
 
     new_password: str
+
+
+class UserStatusIn(BaseModel):
+    is_active: bool

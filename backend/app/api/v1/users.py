@@ -12,7 +12,7 @@ from app.db.session import get_db
 from app.models.enums import UserRole
 from app.models.people import StudentProfile, TeacherProfile
 from app.models.user import User
-from app.schemas.auth import PasswordResetIn, UserOut
+from app.schemas.auth import PasswordResetIn, UserOut, UserStatusIn
 from app.schemas.people import UserCreate
 
 router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(require_admin)])
@@ -76,7 +76,7 @@ def create_user(data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.patch("/{user_id}/status", response_model=UserOut)
-def set_status(user_id: int, is_active: bool = Query(...), db: Session = Depends(get_db)):
+def set_status(user_id: int, data: UserStatusIn, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
