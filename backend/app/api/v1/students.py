@@ -11,8 +11,8 @@ from app.schemas.students import StudentCreate, StudentOut, StudentUpdate
 
 router = APIRouter(prefix="/students", tags=["students"])
 
-# Fields a student may change on their own profile (class/roll/status stay admin-only).
-SELF_EDITABLE = {"first_name", "last_name", "date_of_birth", "phone", "address"}
+# Fields a student may change on their own profile (class/roll/division/status stay admin-only).
+SELF_EDITABLE = {"first_name", "last_name", "date_of_birth", "phone", "address", "guardian_name", "guardian_phone"}
 
 
 def _code(db: Session) -> str:
@@ -104,6 +104,9 @@ def create_student(data: StudentCreate, db: Session = Depends(get_db)):
         class_id=data.class_id,
         section_id=data.section_id,
         roll_number=data.roll_number,
+        division=data.division,
+        guardian_name=data.guardian_name,
+        guardian_phone=data.guardian_phone,
         status=PersonStatus.ACTIVE,
     )
     db.add(student)
@@ -141,3 +144,39 @@ def deactivate(student_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(s)
     return s
+
+
+@router.patch("/{student_id}/activate", response_model=StudentOut, dependencies=[Depends(require_admin)])
+def activate(student_id: int, db: Session = Depends(get_db)):
+    s = db.get(StudentProfile, student_id)
+    if not s:
+        raise HTTPException(404, "Student not found")
+    s.status = PersonStatus.ACTIVE
+    db.commit()
+    db.refresh(s)
+    return s
+
+
+@router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
+def delete_student(student_id: int, db: Session = Depends(get_db)):
+    """Permanently delete a student, their login, and all dependent records.
+
+    Runs in one transaction. ORM cascades remove attendances, marks/results,
+    fee invoices (+payments), and assignment submissions; the linked login and
+    its refresh tokens are removed too. Prefer deactivate when history must
+    be preserved.
+    """
+    s = db.get(StudentProfile, student_id)
+    if not s:
+        raise HTTPException(404, "Student not found")
+    try:
+        login = db.get(User, s.user_id) if s.user_id is not None else None
+        db.delete(s)
+        db.flush()
+        if login is not None:
+            db.delete(login)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return None

@@ -26,6 +26,9 @@ class StudentProfile(Base):
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id", ondelete="SET NULL"), index=True)
     section_id: Mapped[int | None] = mapped_column(ForeignKey("sections.id", ondelete="SET NULL"), index=True)
     roll_number: Mapped[int | None] = mapped_column(Integer)
+    division: Mapped[str | None] = mapped_column(String(32))  # e.g. Class 9: Science/Commerce/Arts
+    guardian_name: Mapped[str | None] = mapped_column(String(200))
+    guardian_phone: Mapped[str | None] = mapped_column(String(32))
     status: Mapped[PersonStatus] = mapped_column(default=PersonStatus.ACTIVE)
     profile_photo_url: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

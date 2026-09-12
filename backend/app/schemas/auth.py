@@ -32,3 +32,9 @@ class UserOut(BaseModel):
 class PasswordChangeIn(BaseModel):
     current_password: str
     new_password: str
+
+
+class PasswordResetIn(BaseModel):
+    """Admin-driven reset: no current password required (RBAC-guarded)."""
+
+    new_password: str

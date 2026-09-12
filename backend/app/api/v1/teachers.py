@@ -134,3 +134,39 @@ def deactivate_teacher(teacher_id: int, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(t)
     return t
+
+
+@router.patch("/{teacher_id}/activate", response_model=TeacherOut, dependencies=[Depends(require_admin)])
+def activate_teacher(teacher_id: int, db: Session = Depends(get_db)):
+    t = db.get(TeacherProfile, teacher_id)
+    if not t:
+        raise HTTPException(404, "Teacher not found")
+    t.status = PersonStatus.ACTIVE
+    db.commit()
+    db.refresh(t)
+    return t
+
+
+@router.delete("/{teacher_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
+def delete_teacher(teacher_id: int, db: Session = Depends(get_db)):
+    """Permanently delete a teacher, their login, and dependent links.
+
+    Runs in one transaction. Class/subject assignment links are removed;
+    authored assignments, marked attendance, and entered marks keep their
+    records with the author reference cleared (SET NULL) so history survives.
+    Prefer deactivate when the teacher may return.
+    """
+    t = db.get(TeacherProfile, teacher_id)
+    if not t:
+        raise HTTPException(404, "Teacher not found")
+    try:
+        login = db.get(User, t.user_id) if t.user_id is not None else None
+        db.delete(t)
+        db.flush()
+        if login is not None:
+            db.delete(login)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return None

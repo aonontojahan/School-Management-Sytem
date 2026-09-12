@@ -1,4 +1,5 @@
 """Password hashing (bcrypt) + JWT access/refresh helpers."""
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -30,7 +31,8 @@ def create_access_token(subject: str, role: str) -> str:
 
 def create_refresh_token(subject: str) -> str:
     expire = _now() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    payload = {"sub": subject, "type": "refresh", "exp": expire}
+    # jti guarantees every token is unique even within the same second.
+    payload = {"sub": subject, "type": "refresh", "jti": secrets.token_hex(16), "exp": expire}
     return jwt.encode(payload, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM)
 
 

@@ -28,5 +28,6 @@ def test_health():
 
 
 def test_seeded_admin_email_passes_login_schema():
-    # Regression: seed default must satisfy EmailStr (`.local` was rejected).
-    assert LoginIn(email="admin@school.edu", password="Admin123!").email == "admin@school.edu"
+    # Regression: seed default must satisfy login identifier (email or username).
+    assert LoginIn(identifier="admin@school.edu", password="Admin123!").identifier == "admin@school.edu"
+    assert LoginIn(identifier="admin", password="Admin123!").identifier == "admin"

@@ -17,6 +17,9 @@ class StudentBase(BaseModel):
     class_id: int | None = None
     section_id: int | None = None
     roll_number: int | None = None
+    division: str | None = None
+    guardian_name: str | None = None
+    guardian_phone: str | None = None
 
 
 class StudentCreate(StudentBase):
@@ -34,12 +37,16 @@ class StudentUpdate(BaseModel):
     class_id: int | None = None
     section_id: int | None = None
     roll_number: int | None = None
+    division: str | None = None
+    guardian_name: str | None = None
+    guardian_phone: str | None = None
     status: PersonStatus | None = None
     profile_photo_url: str | None = None
 
 
 class StudentOut(StudentBase):
     id: int
+    user_id: int | None = None
     student_code: str
     status: PersonStatus
     profile_photo_url: str | None = None

@@ -12,7 +12,7 @@ from app.db.session import get_db
 from app.models.enums import UserRole
 from app.models.people import StudentProfile, TeacherProfile
 from app.models.user import User
-from app.schemas.auth import UserOut
+from app.schemas.auth import PasswordResetIn, UserOut
 from app.schemas.people import UserCreate
 
 router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(require_admin)])
@@ -81,6 +81,20 @@ def set_status(user_id: int, is_active: bool = Query(...), db: Session = Depends
     if not user:
         raise HTTPException(404, "User not found")
     user.is_active = is_active
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/{user_id}/password", response_model=UserOut)
+def reset_password(user_id: int, data: PasswordResetIn, db: Session = Depends(get_db)):
+    """Admin resets any login password (e.g. forgotten by a student/teacher)."""
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+    if len(data.new_password) < 8:
+        raise HTTPException(400, "New password must be at least 8 characters")
+    user.hashed_password = hash_password(data.new_password)
     db.commit()
     db.refresh(user)
     return user

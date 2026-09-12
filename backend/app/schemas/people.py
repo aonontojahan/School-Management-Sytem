@@ -36,6 +36,7 @@ class TeacherUpdate(BaseModel):
 
 class TeacherOut(TeacherBase):
     id: int
+    user_id: int | None = None
     teacher_code: str
     status: PersonStatus
 
