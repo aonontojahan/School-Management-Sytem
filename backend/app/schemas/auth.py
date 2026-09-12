@@ -4,7 +4,7 @@ from app.models.enums import UserRole
 
 
 class LoginIn(BaseModel):
-    email: EmailStr
+    identifier: str  # email OR username
     password: str
 
 
@@ -22,6 +22,7 @@ class RefreshIn(BaseModel):
 class UserOut(BaseModel):
     id: int
     email: EmailStr
+    username: str | None
     role: UserRole
     is_active: bool
 

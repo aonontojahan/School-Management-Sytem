@@ -15,5 +15,5 @@ from app.models.enums import (  # noqa: F401
 )
 from app.models.exam import Exam, Mark  # noqa: F401
 from app.models.fee import FeeInvoice, FeePayment, FeeType  # noqa: F401
-from app.models.people import GuardianProfile, StudentProfile, TeacherProfile  # noqa: F401
+from app.models.people import StudentProfile, TeacherProfile  # noqa: F401
 from app.models.user import RefreshToken, User  # noqa: F401

@@ -3,6 +3,7 @@ import secrets
 from datetime import timedelta, timezone, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -31,7 +32,12 @@ def _store_refresh(db: Session, user: User, token: str) -> None:
 
 @router.post("/login", response_model=TokenOut)
 def login(data: LoginIn, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email).first()
+    ident = data.identifier.strip()
+    user = (
+        db.query(User)
+        .filter(or_(User.email == ident, User.username == ident))
+        .first()
+    )
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
     if not user.is_active:

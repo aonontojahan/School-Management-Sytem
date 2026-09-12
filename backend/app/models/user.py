@@ -13,6 +13,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    username: Mapped[str | None] = mapped_column(String(64), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(default=UserRole.STUDENT)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -23,7 +24,6 @@ class User(Base):
 
     student_profile: Mapped["StudentProfile | None"] = relationship(back_populates="user")
     teacher_profile: Mapped["TeacherProfile | None"] = relationship(back_populates="user")
-    guardian_profile: Mapped["GuardianProfile | None"] = relationship(back_populates="user")
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

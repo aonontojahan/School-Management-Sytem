@@ -1,20 +1,46 @@
-"""Student CRUD + search/filter/assign per spec."""
+"""Student CRUD + search/filter/assign + self-service profile per spec."""
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_current_user, require_admin
+from app.core.deps import get_current_user, require_admin, require_student
 from app.db.session import get_db
 from app.models.enums import PersonStatus, UserRole
-from app.models.people import GuardianProfile, StudentProfile
+from app.models.people import StudentProfile
 from app.models.user import User
 from app.schemas.students import StudentCreate, StudentOut, StudentUpdate
 
 router = APIRouter(prefix="/students", tags=["students"])
 
+# Fields a student may change on their own profile (class/roll/status stay admin-only).
+SELF_EDITABLE = {"first_name", "last_name", "date_of_birth", "phone", "address"}
+
 
 def _code(db: Session) -> str:
     n = db.query(StudentProfile).count() + 1
     return f"STU-{(n):06d}"
+
+
+def _get_own_profile(db: Session, user: User) -> StudentProfile:
+    profile = db.query(StudentProfile).filter(StudentProfile.user_id == user.id).first()
+    if not profile:
+        raise HTTPException(404, "No student profile linked to this login")
+    return profile
+
+
+@router.get("/me", response_model=StudentOut)
+def get_my_profile(db: Session = Depends(get_db), user: User = Depends(require_student)):
+    return _get_own_profile(db, user)
+
+
+@router.patch("/me", response_model=StudentOut)
+def update_my_profile(data: StudentUpdate, db: Session = Depends(get_db), user: User = Depends(require_student)):
+    s = _get_own_profile(db, user)
+    for k, v in data.model_dump(exclude_unset=True).items():
+        if k in SELF_EDITABLE:
+            setattr(s, k, v)
+    db.commit()
+    db.refresh(s)
+    return s
 
 
 @router.get("", response_model=list[StudentOut])
@@ -52,7 +78,20 @@ def list_students(
 def create_student(data: StudentCreate, db: Session = Depends(get_db)):
     if data.email and db.query(StudentProfile).filter(StudentProfile.email == data.email).first():
         raise HTTPException(400, "Student email already exists")
+    user_id: int | None = None
+    if data.user_id is not None:
+        login = db.get(User, data.user_id)
+        if not login:
+            raise HTTPException(404, "Linked login not found")
+        if login.role != UserRole.STUDENT:
+            raise HTTPException(400, "Linked login must have role STUDENT")
+        if db.query(StudentProfile).filter(StudentProfile.user_id == login.id).first():
+            raise HTTPException(400, "Login is already linked to a student profile")
+        if data.email and login.email.lower() != data.email.lower():
+            raise HTTPException(400, "Profile email must match the login email")
+        user_id = login.id
     student = StudentProfile(
+        user_id=user_id,
         student_code=_code(db),
         first_name=data.first_name,
         last_name=data.last_name,
@@ -67,8 +106,6 @@ def create_student(data: StudentCreate, db: Session = Depends(get_db)):
         roll_number=data.roll_number,
         status=PersonStatus.ACTIVE,
     )
-    if data.guardian_ids:
-        student.guardians = db.query(GuardianProfile).filter(GuardianProfile.id.in_(data.guardian_ids)).all()
     db.add(student)
     db.commit()
     db.refresh(student)
@@ -88,11 +125,8 @@ def update_student(student_id: int, data: StudentUpdate, db: Session = Depends(g
     s = db.get(StudentProfile, student_id)
     if not s:
         raise HTTPException(404, "Student not found")
-    payload = data.model_dump(exclude_unset=True, exclude={"guardian_ids"})
-    for k, v in payload.items():
+    for k, v in data.model_dump(exclude_unset=True).items():
         setattr(s, k, v)
-    if data.guardian_ids is not None:
-        s.guardians = db.query(GuardianProfile).filter(GuardianProfile.id.in_(data.guardian_ids)).all()
     db.commit()
     db.refresh(s)
     return s

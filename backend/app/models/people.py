@@ -1,18 +1,11 @@
-"""Student / Teacher / Guardian profiles + student-guardian link."""
+"""Student / Teacher profiles. Each profile links to its login via user_id."""
 from datetime import date, datetime
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Table, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.enums import Gender, PersonStatus
-
-student_guardian = Table(
-    "student_guardian",
-    Base.metadata,
-    Column("student_id", ForeignKey("student_profiles.id", ondelete="CASCADE"), primary_key=True),
-    Column("guardian_id", ForeignKey("guardian_profiles.id", ondelete="CASCADE"), primary_key=True),
-)
 
 
 class StudentProfile(Base):
@@ -43,9 +36,6 @@ class StudentProfile(Base):
     user: Mapped["User | None"] = relationship(back_populates="student_profile")
     school_class: Mapped["SchoolClass | None"] = relationship(back_populates="students")
     section: Mapped["Section | None"] = relationship(back_populates="students")
-    guardians: Mapped[list["GuardianProfile"]] = relationship(
-        secondary=student_guardian, back_populates="students"
-    )
     attendances: Mapped[list["Attendance"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"
     )
@@ -81,24 +71,3 @@ class TeacherProfile(Base):
     subjects: Mapped[list["Subject"]] = relationship(secondary="teacher_subjects", back_populates="teachers")
     sections: Mapped[list["Section"]] = relationship(secondary="teacher_sections", back_populates="teachers")
     assignments: Mapped[list["Assignment"]] = relationship(back_populates="teacher")
-
-
-class GuardianProfile(Base):
-    __tablename__ = "guardian_profiles"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), unique=True)
-    first_name: Mapped[str] = mapped_column(String(100))
-    last_name: Mapped[str] = mapped_column(String(100))
-    email: Mapped[str | None] = mapped_column(String(255), unique=True)
-    phone: Mapped[str | None] = mapped_column(String(32))
-    address: Mapped[str | None] = mapped_column(String(500))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    user: Mapped["User | None"] = relationship(back_populates="guardian_profile")
-    students: Mapped[list[StudentProfile]] = relationship(
-        secondary=student_guardian, back_populates="guardians"
-    )

@@ -17,11 +17,10 @@ class StudentBase(BaseModel):
     class_id: int | None = None
     section_id: int | None = None
     roll_number: int | None = None
-    guardian_ids: list[int] = []
 
 
 class StudentCreate(StudentBase):
-    pass
+    user_id: int | None = None
 
 
 class StudentUpdate(BaseModel):
@@ -37,7 +36,6 @@ class StudentUpdate(BaseModel):
     roll_number: int | None = None
     status: PersonStatus | None = None
     profile_photo_url: str | None = None
-    guardian_ids: list[int] | None = None
 
 
 class StudentOut(StudentBase):

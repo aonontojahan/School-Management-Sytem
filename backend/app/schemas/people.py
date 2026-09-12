@@ -18,7 +18,7 @@ class TeacherBase(BaseModel):
 
 
 class TeacherCreate(TeacherBase):
-    pass
+    user_id: int | None = None
 
 
 class TeacherUpdate(BaseModel):
@@ -42,34 +42,11 @@ class TeacherOut(TeacherBase):
     model_config = {"from_attributes": True}
 
 
-class GuardianBase(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr | None = None
-    phone: str | None = None
-    address: str | None = None
-
-
-class GuardianCreate(GuardianBase):
-    pass
-
-
-class GuardianUpdate(BaseModel):
-    first_name: str | None = None
-    last_name: str | None = None
-    email: EmailStr | None = None
-    phone: str | None = None
-    address: str | None = None
-
-
-class GuardianOut(GuardianBase):
-    id: int
-
-    model_config = {"from_attributes": True}
-
-
 class UserCreate(BaseModel):
     email: EmailStr
+    username: str
     password: str
     role: str
     is_active: bool = True
+    teacher_profile_id: int | None = None
+    student_profile_id: int | None = None
