@@ -526,14 +526,44 @@ export function StudentManagement() {
             ))}
           </select>
 
-          {(search || filterClass || filterStatus || filterDivision) && (
-            <button
-              onClick={() => { setSearch(""); setFilterClass(""); setFilterStatus(""); setFilterDivision(""); setPage(0); }}
-              className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1.5 rounded-lg transition"
-            >
-              Clear
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (!students || students.length === 0) return;
+              const lines: string[] = [];
+              lines.push("STUDENT LIST");
+              lines.push("=".repeat(80));
+              const filterParts: string[] = [];
+              if (filterClass) filterParts.push(`Class: ${classes?.find(c => c.id === filterClass)?.name || filterClass}`);
+              if (filterStatus) filterParts.push(`Status: ${filterStatus}`);
+              if (filterDivision) filterParts.push(`Division: ${filterDivision}`);
+              if (search) filterParts.push(`Search: "${search}"`);
+              if (filterParts.length > 0) lines.push(`Filters: ${filterParts.join(" | ")}`);
+              lines.push(`Total: ${students.length} student(s)`);
+              lines.push("");
+              lines.push(`${"Roll".padEnd(6)} ${"Code".padEnd(12)} ${"Name".padEnd(25)} ${"Class".padEnd(10)} ${"Section".padEnd(10)} ${"Group".padEnd(10)} ${"Status".padEnd(10)}`);
+              lines.push("-".repeat(80));
+              for (const s of students) {
+                const cls = classes?.find(c => c.id === s.class_id);
+                const sec = allSections?.find(sec => sec.id === s.section_id);
+                lines.push(
+                  `${String(s.roll_number ?? "-").padEnd(6)} ${s.student_code.padEnd(12)} ${(s.first_name + " " + s.last_name).padEnd(25)} ${(cls?.name || "-").padEnd(10)} ${(sec?.name || "-").padEnd(10)} ${(s.group || "-").padEnd(10)} ${s.status.padEnd(10)}`
+                );
+              }
+              const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "students.txt";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition border border-slate-200"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download
+          </button>
         </div>
       </div>
 

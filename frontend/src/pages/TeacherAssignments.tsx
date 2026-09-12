@@ -5,20 +5,11 @@ import { api } from "../lib/api";
 interface RoutineEntry {
   day: string;
   class_name: string;
-  section_name: string;
-  subject_name: string;
-}
-
-interface ClassEntry {
-  id: number;
-  name: string;
-  code: string;
-}
-
-interface SectionEntry {
-  id: number;
-  name: string;
   class_id: number;
+  section_name: string;
+  section_id: number;
+  subject_name: string;
+  subject_id: number;
 }
 
 interface Assignment {
@@ -33,6 +24,9 @@ interface Assignment {
 }
 
 interface ClassOption {
+  class_id: number;
+  section_id: number;
+  subject_id: number;
   class_name: string;
   section_name: string;
   subject_name: string;
@@ -74,16 +68,6 @@ export function TeacherAssignments() {
     queryFn: async () => (await api.get("/routines/teacher")).data as RoutineEntry[],
   });
 
-  const { data: allClasses } = useQuery({
-    queryKey: ["classes"],
-    queryFn: async () => (await api.get("/admin/classes")).data as ClassEntry[],
-  });
-
-  const { data: allSections } = useQuery({
-    queryKey: ["sections"],
-    queryFn: async () => (await api.get("/admin/sections")).data as SectionEntry[],
-  });
-
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ["assignments"],
     queryFn: async () => (await api.get("/assignments")).data as Assignment[],
@@ -93,9 +77,12 @@ export function TeacherAssignments() {
     if (!routines) return [];
     const map = new Map<string, ClassOption>();
     for (const r of routines) {
-      const key = `${r.class_name}|${r.section_name}|${r.subject_name}`;
+      const key = `${r.class_id}|${r.section_id}|${r.subject_id}`;
       if (!map.has(key)) {
         map.set(key, {
+          class_id: r.class_id,
+          section_id: r.section_id,
+          subject_id: r.subject_id,
           class_name: r.class_name,
           section_name: r.section_name,
           subject_name: r.subject_name,
@@ -107,14 +94,6 @@ export function TeacherAssignments() {
   }, [routines]);
 
   const selectedOption = classOptions.find((c) => c.label === selectedLabel);
-
-  const resolvedIds = useMemo(() => {
-    if (!selectedOption || !allClasses || !allSections) return null;
-    const cls = allClasses.find((c) => c.name === selectedOption.class_name);
-    const sec = allSections.find((s) => s.name === selectedOption.section_name);
-    if (!cls || !sec) return null;
-    return { classId: cls.id, sectionId: sec.id };
-  }, [selectedOption, allClasses, allSections]);
 
   const createMutation = useMutation({
     mutationFn: async (payload: {
@@ -147,14 +126,14 @@ export function TeacherAssignments() {
   };
 
   const handleSubmit = () => {
-    if (!resolvedIds || !title.trim() || !dueDate) return;
+    if (!selectedOption || !title.trim() || !dueDate) return;
     createMutation.mutate({
       title: title.trim(),
       description: description.trim(),
       due_date: dueDate,
-      class_id: resolvedIds.classId,
-      section_id: resolvedIds.sectionId,
-      subject_id: 0,
+      class_id: selectedOption.class_id,
+      section_id: selectedOption.section_id,
+      subject_id: selectedOption.subject_id,
     });
   };
 
@@ -197,7 +176,7 @@ export function TeacherAssignments() {
           <h3 className="text-sm font-bold text-slate-700 mb-4">Create Assignment</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Class</label>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Class / Section / Subject</label>
               <select
                 value={selectedLabel}
                 onChange={(e) => setSelectedLabel(e.target.value)}

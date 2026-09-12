@@ -195,7 +195,7 @@ def admin_list_students(
         query = query.filter(StudentProfile.status == status)
     if division:
         query = query.filter(StudentProfile.division == division)
-    return query.order_by(StudentProfile.id).offset(skip).limit(limit).all()
+    return query.order_by(StudentProfile.roll_number.asc().nullslast()).offset(skip).limit(limit).all()
 
 
 @router.get("/teachers", response_model=list[TeacherOut])
@@ -473,7 +473,7 @@ def admin_get_teacher_detail(teacher_id: int, db: Session = Depends(get_db), use
 
 
 @router.get("/classes", response_model=list[dict])
-def admin_list_classes_for_dropdown(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+def admin_list_classes_for_dropdown(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Get classes for dropdown selection."""
     classes = db.query(SchoolClass).order_by(SchoolClass.sort_order).all()
     return [{"id": c.id, "name": c.name, "code": c.code} for c in classes]
@@ -481,7 +481,7 @@ def admin_list_classes_for_dropdown(db: Session = Depends(get_db), user: User = 
 
 @router.get("/sections", response_model=list[dict])
 def admin_list_sections_for_dropdown(
-    class_id: int | None = None, db: Session = Depends(get_db), user: User = Depends(require_admin)
+    class_id: int | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     """Get sections for dropdown selection, optionally filtered by class."""
     query = db.query(Section)
@@ -492,7 +492,7 @@ def admin_list_sections_for_dropdown(
 
 
 @router.get("/subjects", response_model=list[dict])
-def admin_list_subjects_for_dropdown(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+def admin_list_subjects_for_dropdown(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Get subjects for dropdown selection."""
     subjects = db.query(Subject).order_by(Subject.name).all()
     return [{"id": s.id, "name": s.name, "code": s.code} for s in subjects]
@@ -567,7 +567,7 @@ def admin_list_groups(user: User = Depends(require_admin)):
 
 
 @router.get("/periods")
-def admin_list_periods(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+def admin_list_periods(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Get all periods for the active academic year."""
     from app.models.academic import AcademicYear
     year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()

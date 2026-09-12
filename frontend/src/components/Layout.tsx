@@ -124,7 +124,7 @@ function Icon({ path, className = "w-5 h-5" }: { path: string; className?: strin
 
 function Sidebar({ sections, pathname }: { sections: MenuSection[]; pathname: string }) {
   return (
-    <nav className="w-64 shrink-0 bg-slate-900 min-h-[calc(100vh-56px)] flex flex-col">
+    <nav className="w-64 h-full bg-slate-900 flex flex-col">
       <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {sections.map((section, si) => (
           <div key={si}>
@@ -367,7 +367,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <div className="flex">
         {/* Desktop sidebar */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block sticky top-14 h-[calc(100vh-56px)] shrink-0">
           <Sidebar sections={sections} pathname={pathname} />
         </div>
 
@@ -390,7 +390,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 p-6 min-h-[calc(100vh-56px)]">{children}</main>
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   );

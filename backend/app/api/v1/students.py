@@ -71,7 +71,7 @@ def list_students(
         query = query.filter(StudentProfile.section_id == section_id)
     if status:
         query = query.filter(StudentProfile.status == status)
-    return query.order_by(StudentProfile.id).offset(skip).limit(limit).all()
+    return query.order_by(StudentProfile.roll_number.asc().nullslast()).offset(skip).limit(limit).all()
 
 
 @router.post("", response_model=StudentOut, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_admin)])

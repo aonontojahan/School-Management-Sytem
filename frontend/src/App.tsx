@@ -9,6 +9,7 @@ import { StudentDashboard } from "./pages/StudentDashboard";
 import { StudentManagement } from "./pages/admin/StudentManagement";
 import { TeacherManagement } from "./pages/admin/TeacherManagement";
 import { AdminRoutinePage } from "./pages/admin/AdminRoutinePage";
+import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
 import { AdminSubjectPage } from "./pages/admin/AdminSubjectPage";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { TeacherAttendance } from "./pages/TeacherAttendance";
@@ -25,6 +26,13 @@ import {
   ReportsPage,
   ProfilePage,
 } from "./pages/Tables";
+
+function RoutineRouter() {
+  const { role } = useAuth();
+  if (role === "TEACHER") return <TeacherSchedulePage />;
+  if (role === "STUDENT") return <TeacherSchedulePage />;
+  return <AdminRoutinePage />;
+}
 
 function Shelled({ children, roles }: { children: React.ReactNode; roles?: ("ADMIN" | "TEACHER" | "STUDENT" | "GUARDIAN")[] }) {
   return (
@@ -66,7 +74,7 @@ export default function App() {
         <Route path="/student/dashboard" element={<Shelled roles={["STUDENT"]}><StudentDashboard /></Shelled>} />
         <Route path="/students" element={<Shelled roles={["ADMIN"]}><StudentManagement /></Shelled>} />
         <Route path="/teachers" element={<Shelled roles={["ADMIN"]}><TeacherManagement /></Shelled>} />
-        <Route path="/routines" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><AdminRoutinePage /></Shelled>} />
+        <Route path="/routines" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><RoutineRouter /></Shelled>} />
         <Route path="/classes" element={<Shelled roles={["ADMIN", "STUDENT"]}><Classes /></Shelled>} />
         <Route path="/subjects" element={<Shelled roles={["ADMIN"]}><AdminSubjectPage /></Shelled>} />
         <Route path="/attendance" element={<Shelled><AttendanceRouter /></Shelled>} />

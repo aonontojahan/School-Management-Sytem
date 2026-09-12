@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useAuth } from "../auth/AuthContext";
 
 interface RoutineEntry {
   id: number;
@@ -14,16 +13,6 @@ interface RoutineEntry {
   subject_name: string;
 }
 
-interface Period {
-  id: number;
-  number: number;
-  label: string;
-  start_time: string;
-  end_time: string;
-}
-
-
-const DAYS = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"] as const;
 const DAY_LABELS: Record<string, string> = {
   SUNDAY: "Sun",
   MONDAY: "Mon",
@@ -47,17 +36,11 @@ function getUniqueSubjects(entries: RoutineEntry[]): string[] {
 }
 
 export function TeacherDashboard() {
-  const { email } = useAuth();
   const today = getTodayName();
 
   const { data: routine, isLoading: routineLoading } = useQuery({
     queryKey: ["teacher-routine"],
     queryFn: async () => (await api.get("/routines/teacher")).data as RoutineEntry[],
-  });
-
-  const { data: periods } = useQuery({
-    queryKey: ["periods"],
-    queryFn: async () => (await api.get("/admin/periods")).data as Period[],
   });
 
   const isLoading = routineLoading;
@@ -80,13 +63,6 @@ export function TeacherDashboard() {
     ? routine.filter((e) => e.day === today)
     : [];
 
-  const weeklyTimetable: Record<string, RoutineEntry[]> = {};
-  for (const day of DAYS) {
-    weeklyTimetable[day] = routine
-      ? routine.filter((e) => e.day === day)
-      : [];
-  }
-
   const totalClassesThisWeek = routine ? routine.length : 0;
   const classesToday = todaySchedule.length;
   const assignedSubjects = routine ? getUniqueSubjects(routine).length : 0;
@@ -95,8 +71,7 @@ export function TeacherDashboard() {
     <div className="space-y-6">
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-indigo-700 to-indigo-500 rounded-2xl p-6 text-white shadow">
-        <p className="text-indigo-200 text-sm">Signed in as {email}</p>
-        <h2 className="text-2xl font-extrabold mt-1">
+        <h2 className="text-2xl font-extrabold">
           Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"}, Teacher
         </h2>
         <p className="text-indigo-100 text-sm mt-1">
@@ -165,73 +140,6 @@ export function TeacherDashboard() {
               ))}
           </div>
         )}
-      </div>
-
-      {/* Weekly Timetable Grid */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5">
-        <h3 className="text-sm font-bold text-slate-700 mb-4">Weekly Timetable</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Period</th>
-                {DAYS.map((day) => (
-                  <th
-                    key={day}
-                    className={`text-center py-2 px-3 text-xs font-semibold ${
-                      day === today ? "text-indigo-700 bg-indigo-50 rounded-t-lg" : "text-slate-500"
-                    }`}
-                  >
-                    {DAY_LABELS[day]}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {periods
-                ? periods.map((period) => (
-                    <tr key={period.id} className="border-b border-slate-100 last:border-0">
-                      <td className="py-2 px-3 text-xs font-medium text-slate-600 whitespace-nowrap">
-                        {formatTime(period.start_time)} – {formatTime(period.end_time)}
-                      </td>
-                      {DAYS.map((day) => {
-                        const entry = weeklyTimetable[day].find(
-                          (e) => e.period_label === period.label
-                        );
-                        return (
-                          <td
-                            key={day}
-                            className={`py-2 px-3 text-center ${
-                              day === today ? "bg-indigo-50/50" : ""
-                            }`}
-                          >
-                            {entry ? (
-                              <div>
-                                <p className="text-xs font-semibold text-slate-900">
-                                  {entry.subject_name}
-                                </p>
-                                <p className="text-[10px] text-slate-500">
-                                  {entry.class_name}-{entry.section_name}
-                                </p>
-                              </div>
-                            ) : (
-                              <span className="text-slate-300">—</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))
-                : (
-                    <tr>
-                      <td colSpan={DAYS.length + 1} className="text-center py-8 text-slate-400 text-sm">
-                        No period data available
-                      </td>
-                    </tr>
-                  )}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
