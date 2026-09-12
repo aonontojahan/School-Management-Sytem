@@ -49,6 +49,7 @@ interface StudentFormData {
   date_of_birth: string;
   gender: string;
   address: string;
+  admission_date: string;
   class_id: number | null;
   section_id: number | null;
   roll_number: number | null;
@@ -66,6 +67,7 @@ const emptyForm: StudentFormData = {
   date_of_birth: "",
   gender: "",
   address: "",
+  admission_date: "",
   class_id: null,
   section_id: null,
   roll_number: null,
@@ -165,6 +167,16 @@ function StudentForm({
       <InputField label="Date of Birth" type="date" value={data.date_of_birth} onChange={(v) => onChange({ ...data, date_of_birth: v })} />
       <SelectField label="Gender" options={GENDERS.map((g) => ({ value: g, label: g }))} value={data.gender} onChange={(v) => onChange({ ...data, gender: v })} />
       <InputField label="Address" value={data.address} onChange={(v) => onChange({ ...data, address: v })} />
+      <InputField label="Admission Date" type="date" value={data.admission_date} onChange={(v) => onChange({ ...data, admission_date: v })} />
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
+        <input
+          type="text"
+          readOnly
+          value={data.date_of_birth ? `${Math.floor((Date.now() - new Date(data.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years` : "—"}
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+        />
+      </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
         <select
@@ -267,6 +279,7 @@ export function StudentManagement() {
         date_of_birth: data.date_of_birth || undefined,
         gender: data.gender || undefined,
         address: data.address || undefined,
+        admission_date: data.admission_date || undefined,
         class_id: data.class_id || undefined,
         section_id: data.section_id || undefined,
         roll_number: data.roll_number || undefined,
@@ -297,6 +310,7 @@ export function StudentManagement() {
         date_of_birth: data.date_of_birth || undefined,
         gender: data.gender || undefined,
         address: data.address || undefined,
+        admission_date: data.admission_date || undefined,
         class_id: data.class_id || undefined,
         section_id: data.section_id || undefined,
         roll_number: data.roll_number || undefined,
@@ -372,6 +386,7 @@ export function StudentManagement() {
       date_of_birth: s.date_of_birth || "",
       gender: s.gender || "",
       address: s.address || "",
+      admission_date: s.admission_date || "",
       class_id: s.class_id,
       section_id: s.section_id,
       roll_number: s.roll_number,

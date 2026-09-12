@@ -35,6 +35,7 @@ class StudentUpdate(BaseModel):
     email: EmailStr | None = None
     phone: str | None = None
     address: str | None = None
+    admission_date: date | None = None
     class_id: int | None = None
     section_id: int | None = None
     roll_number: int | None = None
