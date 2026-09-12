@@ -1,4 +1,4 @@
-"""Seed baseline: fee types, subjects, admin user. Idempotent.
+"""Seed baseline: academic year, classes, sections, fee types, subjects, admin user. Idempotent.
 
 Usage (PowerShell, from backend/):
   $env:DATABASE_URL="postgresql+psycopg://aonontojahan:YOUR_PW@localhost:5432/sms_db"
@@ -6,13 +6,14 @@ Usage (PowerShell, from backend/):
 Admin credentials come from env: ADMIN_EMAIL / ADMIN_PASSWORD (defaults shown, change immediately).
 """
 import os
+from datetime import date
 
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
-from app.models.academic import Subject
+from app.models.academic import AcademicYear, SchoolClass, Section, Subject
 from app.models.enums import FeeTypeName, UserRole
 from app.models.fee import FeeType
 from app.models.user import User
@@ -58,17 +59,47 @@ DEFAULT_DEPARTMENTS = [
 ]
 
 PERIODS_PER_DAY = 6
-CLASSES = [5, 6, 7, 8, 9]
+CLASS_NAMES = ["Nursery", "Play", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 MAX_PERIODS_PER_TEACHER = 4
 
 
 def seed(db: Session) -> None:
+    # Fee types
     for name in FeeTypeName:
         if not db.query(FeeType).filter(FeeType.name == name).first():
             db.add(FeeType(name=name, description=f"{name.value.title()} fee"))
+
+    # Subjects
     for name, code in DEFAULT_SUBJECTS:
         if not db.query(Subject).filter(Subject.code == code).first():
             db.add(Subject(name=name, code=code))
+
+    # Academic year (current year)
+    year_name = str(date.today().year)
+    year = db.query(AcademicYear).filter(AcademicYear.name == year_name).first()
+    if not year:
+        year = AcademicYear(
+            name=year_name,
+            start_date=date(date.today().year, 1, 1),
+            end_date=date(date.today().year, 12, 31),
+            is_active=True,
+        )
+        db.add(year)
+        db.flush()
+
+    # Classes
+    for cls_name in CLASS_NAMES:
+        code = f"C{cls_name}-{year_name}"
+        if not db.query(SchoolClass).filter(SchoolClass.code == code).first():
+            cls = SchoolClass(academic_year_id=year.id, name=f"Class {cls_name}" if cls_name.isdigit() else cls_name, code=code)
+            db.add(cls)
+            db.flush()
+            # Default sections A, B for each class
+            for sec_name in ["A", "B"]:
+                if not db.query(Section).filter(Section.class_id == cls.id, Section.name == sec_name).first():
+                    db.add(Section(class_id=cls.id, name=sec_name))
+
+    # Admin user
     email = os.getenv("ADMIN_EMAIL", "admin@school.edu")
     password = os.getenv("ADMIN_PASSWORD", "Admin123!")
     if not db.query(User).filter(User.email == email).first():
@@ -76,6 +107,7 @@ def seed(db: Session) -> None:
         print(f"Created admin: {email}")
     else:
         print(f"Admin exists: {email}")
+
     db.commit()
 
 

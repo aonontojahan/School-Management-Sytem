@@ -74,8 +74,137 @@ const emptyForm: StudentFormData = {
   guardian_phone: "",
 };
 
-const DIVISIONS = ["Science", "Arts", "Commerce"];
+const DIVISIONS = ["N/A", "Science", "Arts", "Commerce"];
 const GENDERS = ["MALE", "FEMALE", "OTHER"];
+
+function InputField({
+  label,
+  type = "text",
+  required,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  value: string | number | null;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+    </div>
+  );
+}
+
+function SelectField({
+  label,
+  options,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
+      >
+        <option value="">{placeholder || "Select…"}</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function StudentForm({
+  data,
+  onChange,
+  isCreate,
+  classes,
+  sections,
+}: {
+  data: StudentFormData;
+  onChange: (d: StudentFormData) => void;
+  isCreate: boolean;
+  classes?: DropdownItem[];
+  sections?: DropdownItem[];
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <InputField label="First Name" required value={data.first_name} onChange={(v) => onChange({ ...data, first_name: v })} />
+      <InputField label="Last Name" required value={data.last_name} onChange={(v) => onChange({ ...data, last_name: v })} />
+      <InputField label="Email" type="email" value={data.email} onChange={(v) => onChange({ ...data, email: v })} />
+      {isCreate && (
+        <InputField label="Initial Password" type="password" value={data.initial_password} onChange={(v) => onChange({ ...data, initial_password: v })} />
+      )}
+      <InputField label="Phone" value={data.phone} onChange={(v) => onChange({ ...data, phone: v })} />
+      <InputField label="Date of Birth" type="date" value={data.date_of_birth} onChange={(v) => onChange({ ...data, date_of_birth: v })} />
+      <SelectField label="Gender" options={GENDERS.map((g) => ({ value: g, label: g }))} value={data.gender} onChange={(v) => onChange({ ...data, gender: v })} />
+      <InputField label="Address" value={data.address} onChange={(v) => onChange({ ...data, address: v })} />
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
+        <select
+          value={data.class_id ?? ""}
+          onChange={(e) => {
+            const cid = e.target.value ? Number(e.target.value) : null;
+            onChange({ ...data, class_id: cid, section_id: null });
+          }}
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          <option value="">Select class…</option>
+          {classes?.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Section</label>
+        <select
+          value={data.section_id ?? ""}
+          onChange={(e) => onChange({ ...data, section_id: e.target.value ? Number(e.target.value) : null })}
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          <option value="">Select section…</option>
+          {sections?.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <InputField label="Roll Number" type="number" value={data.roll_number} onChange={(v) => onChange({ ...data, roll_number: v ? Number(v) : null })} />
+      <SelectField label="Division" options={DIVISIONS.map((d) => ({ value: d, label: d }))} value={data.division} onChange={(v) => onChange({ ...data, division: v })} />
+      <InputField label="Guardian Name" value={data.guardian_name} onChange={(v) => onChange({ ...data, guardian_name: v })} />
+      <InputField label="Guardian Phone" value={data.guardian_phone} onChange={(v) => onChange({ ...data, guardian_phone: v })} />
+    </div>
+  );
+}
 
 export function StudentManagement() {
   const queryClient = useQueryClient();
@@ -269,129 +398,6 @@ export function StudentManagement() {
       </span>
     );
 
-  const InputField = ({
-    label,
-    name: _name,
-    type = "text",
-    required,
-    placeholder,
-    value,
-    onChange,
-  }: {
-    label: string;
-    name: string;
-    type?: string;
-    required?: boolean;
-    placeholder?: string;
-    value: string | number | null;
-    onChange: (v: string) => void;
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-      />
-    </div>
-  );
-
-  const SelectField = ({
-    label,
-    name: _name,
-    options,
-    placeholder,
-    value,
-    onChange,
-  }: {
-    label: string;
-    name: string;
-    options: { value: string; label: string }[];
-    placeholder?: string;
-    value: string;
-    onChange: (v: string) => void;
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
-      >
-        <option value="">{placeholder || "Select…"}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-
-  const StudentForm = ({
-    data,
-    onChange,
-    isCreate,
-  }: {
-    data: StudentFormData;
-    onChange: (d: StudentFormData) => void;
-    isCreate: boolean;
-  }) => (
-    <div className="grid grid-cols-2 gap-4">
-      <InputField label="First Name" name="first_name" required value={data.first_name} onChange={(v) => onChange({ ...data, first_name: v })} />
-      <InputField label="Last Name" name="last_name" required value={data.last_name} onChange={(v) => onChange({ ...data, last_name: v })} />
-      <InputField label="Email" name="email" type="email" value={data.email} onChange={(v) => onChange({ ...data, email: v })} />
-      {isCreate && (
-        <InputField label="Initial Password" name="initial_password" type="password" value={data.initial_password} onChange={(v) => onChange({ ...data, initial_password: v })} />
-      )}
-      <InputField label="Phone" name="phone" value={data.phone} onChange={(v) => onChange({ ...data, phone: v })} />
-      <InputField label="Date of Birth" name="date_of_birth" type="date" value={data.date_of_birth} onChange={(v) => onChange({ ...data, date_of_birth: v })} />
-      <SelectField label="Gender" name="gender" options={GENDERS.map((g) => ({ value: g, label: g }))} value={data.gender} onChange={(v) => onChange({ ...data, gender: v })} />
-      <InputField label="Address" name="address" value={data.address} onChange={(v) => onChange({ ...data, address: v })} />
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
-        <select
-          value={data.class_id ?? ""}
-          onChange={(e) => {
-            const cid = e.target.value ? Number(e.target.value) : null;
-            onChange({ ...data, class_id: cid, section_id: null });
-          }}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-        >
-          <option value="">Select class…</option>
-          {classes?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Section</label>
-        <select
-          value={data.section_id ?? ""}
-          onChange={(e) => onChange({ ...data, section_id: e.target.value ? Number(e.target.value) : null })}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-        >
-          <option value="">Select section…</option>
-          {sections?.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <InputField label="Roll Number" name="roll_number" type="number" value={data.roll_number} onChange={(v) => onChange({ ...data, roll_number: v ? Number(v) : null })} />
-      <SelectField label="Division (Class 9)" name="division" options={DIVISIONS.map((d) => ({ value: d, label: d }))} value={data.division} onChange={(v) => onChange({ ...data, division: v })} />
-      <InputField label="Guardian Name" name="guardian_name" value={data.guardian_name} onChange={(v) => onChange({ ...data, guardian_name: v })} />
-      <InputField label="Guardian Phone" name="guardian_phone" value={data.guardian_phone} onChange={(v) => onChange({ ...data, guardian_phone: v })} />
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -459,7 +465,7 @@ export function StudentManagement() {
           >
             <option value="">All Divisions</option>
             {DIVISIONS.map((d) => (
-              <option key={d} value={d}>{d}</option>
+              <option key={d} value={d}>{d === "N/A" ? "Not Applicable" : d}</option>
             ))}
           </select>
 
@@ -545,7 +551,7 @@ export function StudentManagement() {
       )}
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Create New Student" wide>
-        <StudentForm data={form} onChange={setForm} isCreate />
+        <StudentForm data={form} onChange={setForm} isCreate classes={classes} sections={sections} />
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
           <button onClick={() => setCreateOpen(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
           <button onClick={() => createMut.mutate(form)} disabled={createMut.isPending || !form.first_name || !form.last_name} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-60">
@@ -555,7 +561,7 @@ export function StudentManagement() {
       </Modal>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Student" wide>
-        <StudentForm data={form} onChange={setForm} isCreate={false} />
+        <StudentForm data={form} onChange={setForm} isCreate={false} classes={classes} sections={sections} />
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
           <button onClick={() => setEditOpen(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
           <button onClick={() => editMut.mutate(form)} disabled={editMut.isPending || !form.first_name || !form.last_name} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-60">

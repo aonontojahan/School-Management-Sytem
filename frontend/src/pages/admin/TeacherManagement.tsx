@@ -75,6 +75,131 @@ const emptyForm: TeacherFormData = {
   section_ids: [],
 };
 
+function InputField({
+  label,
+  type = "text",
+  required,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  value: string | number | null;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+      />
+    </div>
+  );
+}
+
+function TeacherForm({
+  data,
+  onChange,
+  isCreate,
+  subjects,
+}: {
+  data: TeacherFormData;
+  onChange: (d: TeacherFormData) => void;
+  isCreate: boolean;
+  subjects?: DropdownItem[];
+}) {
+  const addSubject = (id: number) => {
+    if (!data.subject_ids.includes(id)) {
+      onChange({ ...data, subject_ids: [...data.subject_ids, id] });
+    }
+  };
+
+  const removeSubject = (id: number) => {
+    onChange({ ...data, subject_ids: data.subject_ids.filter((i) => i !== id) });
+  };
+
+  const assignedSubjects = subjects?.filter((s) => data.subject_ids.includes(s.id)) || [];
+  const unassignedSubjects = subjects?.filter((s) => !data.subject_ids.includes(s.id)) || [];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <InputField label="First Name" required value={data.first_name} onChange={(v) => onChange({ ...data, first_name: v })} />
+        <InputField label="Last Name" required value={data.last_name} onChange={(v) => onChange({ ...data, last_name: v })} />
+        <InputField label="Email" type="email" value={data.email} onChange={(v) => onChange({ ...data, email: v })} />
+        {isCreate && (
+          <InputField label="Initial Password" type="password" value={data.initial_password} onChange={(v) => onChange({ ...data, initial_password: v })} />
+        )}
+        <InputField label="Phone" value={data.phone} onChange={(v) => onChange({ ...data, phone: v })} />
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Department <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={data.department}
+            onChange={(e) => onChange({ ...data, department: e.target.value })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Select Department</option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
+        <InputField label="Designation" value={data.designation} onChange={(v) => onChange({ ...data, designation: v })} />
+        <InputField label="Joining Date" type="date" value={data.joining_date} onChange={(v) => onChange({ ...data, joining_date: v })} />
+      </div>
+
+      {/* Assigned Subjects */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Assigned Subjects</label>
+        <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 space-y-2">
+          {assignedSubjects.length > 0 && (
+            <ol className="list-decimal list-inside text-sm text-slate-700 space-y-1">
+              {assignedSubjects.map((s) => (
+                <li key={s.id} className="flex items-center justify-between group">
+                  <span>{s.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeSubject(s.id)}
+                    className="text-red-400 hover:text-red-600 text-xs font-bold opacity-0 group-hover:opacity-100 transition ml-2"
+                  >
+                    remove
+                  </button>
+                </li>
+              ))}
+            </ol>
+          )}
+          {unassignedSubjects.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                const id = Number(e.target.value);
+                if (id) addSubject(id);
+              }}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="">+ Add subject…</option>
+              {unassignedSubjects.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function TeacherManagement() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -94,11 +219,6 @@ export function TeacherManagement() {
   const { data: subjects } = useQuery({
     queryKey: ["admin-subjects"],
     queryFn: async () => (await api.get("/admin/subjects")).data as DropdownItem[],
-  });
-
-  const { data: sections } = useQuery({
-    queryKey: ["admin-sections-all"],
-    queryFn: async () => (await api.get("/admin/sections")).data as DropdownItem[],
   });
 
   const { data: departments } = useQuery({
@@ -250,130 +370,6 @@ export function TeacherManagement() {
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">Inactive</span>
     );
 
-  const toggleSubject = (id: number) => {
-    setForm((prev) => ({
-      ...prev,
-      subject_ids: prev.subject_ids.includes(id) ? prev.subject_ids.filter((i) => i !== id) : [...prev.subject_ids, id],
-    }));
-  };
-
-  const toggleSection = (id: number) => {
-    setForm((prev) => ({
-      ...prev,
-      section_ids: prev.section_ids.includes(id) ? prev.section_ids.filter((i) => i !== id) : [...prev.section_ids, id],
-    }));
-  };
-
-  const InputField = ({
-    label,
-    name: _name,
-    type = "text",
-    required,
-    placeholder,
-    value,
-    onChange,
-  }: {
-    label: string;
-    name: string;
-    type?: string;
-    required?: boolean;
-    placeholder?: string;
-    value: string | number | null;
-    onChange: (v: string) => void;
-  }) => (
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-      />
-    </div>
-  );
-
-  const TeacherForm = ({
-    data,
-    onChange,
-    isCreate,
-  }: {
-    data: TeacherFormData;
-    onChange: (d: TeacherFormData) => void;
-    isCreate: boolean;
-  }) => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <InputField label="First Name" name="first_name" required value={data.first_name} onChange={(v) => onChange({ ...data, first_name: v })} />
-        <InputField label="Last Name" name="last_name" required value={data.last_name} onChange={(v) => onChange({ ...data, last_name: v })} />
-        <InputField label="Email" name="email" type="email" value={data.email} onChange={(v) => onChange({ ...data, email: v })} />
-        {isCreate && (
-          <InputField label="Initial Password" name="initial_password" type="password" value={data.initial_password} onChange={(v) => onChange({ ...data, initial_password: v })} />
-        )}
-        <InputField label="Phone" name="phone" value={data.phone} onChange={(v) => onChange({ ...data, phone: v })} />
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            Department <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={data.department}
-            onChange={(e) => onChange({ ...data, department: e.target.value })}
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          >
-            <option value="">Select Department</option>
-            {DEPARTMENTS.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        </div>
-        <InputField label="Designation" name="designation" value={data.designation} onChange={(v) => onChange({ ...data, designation: v })} />
-        <InputField label="Joining Date" name="joining_date" type="date" value={data.joining_date} onChange={(v) => onChange({ ...data, joining_date: v })} />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">Assigned Subjects</label>
-        <div className="flex flex-wrap gap-2">
-          {subjects?.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => toggleSubject(s.id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
-                data.subject_ids.includes(s.id)
-                  ? "bg-indigo-100 border-indigo-300 text-indigo-700"
-                  : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
-              }`}
-            >
-              {s.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-2">Assigned Sections</label>
-        <div className="flex flex-wrap gap-2">
-          {sections?.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => toggleSection(s.id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition ${
-                data.section_ids.includes(s.id)
-                  ? "bg-emerald-100 border-emerald-300 text-emerald-700"
-                  : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
-              }`}
-            >
-              {s.name}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -510,7 +506,7 @@ export function TeacherManagement() {
       )}
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Create New Teacher" wide>
-        <TeacherForm data={form} onChange={setForm} isCreate />
+        <TeacherForm data={form} onChange={setForm} isCreate subjects={subjects} />
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
           <button onClick={() => setCreateOpen(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
           <button onClick={() => createMut.mutate(form)} disabled={createMut.isPending || !form.first_name || !form.last_name} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-60">
@@ -520,7 +516,7 @@ export function TeacherManagement() {
       </Modal>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Teacher" wide>
-        <TeacherForm data={form} onChange={setForm} isCreate={false} />
+        <TeacherForm data={form} onChange={setForm} isCreate={false} subjects={subjects} />
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
           <button onClick={() => setEditOpen(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
           <button onClick={() => editMut.mutate(form)} disabled={editMut.isPending || !form.first_name || !form.last_name} className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition disabled:opacity-60">
