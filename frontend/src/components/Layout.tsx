@@ -123,7 +123,7 @@ function Icon({ path, className = "w-5 h-5" }: { path: string; className?: strin
 
 function Sidebar({ sections, pathname }: { sections: MenuSection[]; pathname: string }) {
   return (
-    <nav className="w-64 shrink-0 bg-slate-900 min-h-[calc(100vh-57px)] flex flex-col">
+    <nav className="w-64 shrink-0 bg-slate-900 min-h-[calc(100vh-56px)] flex flex-col">
       <div className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {sections.map((section, si) => (
           <div key={si}>
@@ -173,7 +173,7 @@ function SearchBar() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex-1 max-w-md mx-4">
+    <form onSubmit={handleSubmit} className="hidden sm:block">
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -183,8 +183,8 @@ function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search students, teachers by name or ID..."
-          className="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition placeholder:text-slate-400"
+          placeholder="Search..."
+          className="w-48 lg:w-64 pl-10 pr-3 py-1.5 text-sm bg-slate-100 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition placeholder:text-slate-400"
         />
       </div>
     </form>
@@ -276,39 +276,45 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center sticky top-0 z-20">
-        {/* Left: Logo + Full Name */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 transition"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-black text-base shadow-md shadow-indigo-200">
-              S
-            </div>
-            <div className="hidden sm:block leading-tight">
-              <p className="font-extrabold text-slate-900 text-[15px]">School Management System</p>
-            </div>
-          </Link>
-        </div>
+      <header className="bg-white border-b border-slate-20px sticky top-0 z-20">
+        <div className="flex items-center justify-between h-14 px-4">
+          {/* Left: Logo + Name */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 transition"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-black text-base shadow-md shadow-indigo-200">
+                S
+              </div>
+              <span className="hidden sm:block font-extrabold text-slate-900 text-[15px]">School Management System</span>
+            </Link>
+          </div>
 
-        {/* Center: Search */}
-        <SearchBar />
+          {/* Right: Search + Role + Profile */}
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <SearchBar />
 
-        {/* Right: Role Badge + Settings Dropdown */}
-        <div className="flex items-center gap-3 shrink-0">
-          {role && (
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200">
-              <span className={`w-2 h-2 rounded-full ${ROLE_COLORS[role]}`} />
-              <span className="text-xs font-medium text-slate-600">{ROLE_LABELS[role]}</span>
-            </div>
-          )}
-          <SettingsDropdown email={email || ""} role={role || "STUDENT"} logout={logout} />
+            {/* Role Badge */}
+            {role && (
+              <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200">
+                <span className={`w-2 h-2 rounded-full ${ROLE_COLORS[role]}`} />
+                <span className="text-xs font-medium text-slate-600">{ROLE_LABELS[role]}</span>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="hidden lg:block w-px h-6 bg-slate-200" />
+
+            {/* Profile Dropdown */}
+            <SettingsDropdown email={email || ""} role={role || "STUDENT"} logout={logout} />
+          </div>
         </div>
       </header>
 
@@ -337,7 +343,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 p-6 min-h-[calc(100vh-57px)]">{children}</main>
+        <main className="flex-1 p-6 min-h-[calc(100vh-56px)]">{children}</main>
       </div>
     </div>
   );
