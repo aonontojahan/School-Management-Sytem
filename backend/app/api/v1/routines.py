@@ -117,6 +117,11 @@ def create_routine(
     if not subject:
         raise HTTPException(404, "Subject not found")
 
+    # Validate subject is assigned to this teacher
+    teacher_subject_ids = {s.id for s in teacher.subjects}
+    if data["subject_id"] not in teacher_subject_ids:
+        raise HTTPException(400, f"Subject '{subject.name}' is not assigned to this teacher")
+
     # Validate period exists
     period = db.get(Period, data["period_id"])
     if not period:
@@ -170,6 +175,15 @@ def update_routine(
     period_id = update_data.get("period_id", routine.period_id)
     teacher_id = update_data.get("teacher_id", routine.teacher_id)
     subject_id = update_data.get("subject_id", routine.subject_id)
+
+    # Validate subject is assigned to the teacher
+    if "subject_id" in update_data or "teacher_id" in update_data:
+        t = db.get(TeacherProfile, teacher_id)
+        if t:
+            teacher_subject_ids = {s.id for s in t.subjects}
+            if subject_id not in teacher_subject_ids:
+                subj = db.get(Subject, subject_id)
+                raise HTTPException(400, f"Subject '{subj.name if subj else subject_id}' is not assigned to this teacher")
 
     _validate_routine(db, class_id, section_id, day, period_id, teacher_id, subject_id, routine_id)
 
@@ -268,9 +282,12 @@ def teacher_routine(
             "period_label": period.label if period else None,
             "start_time": period.start_time.isoformat() if period else None,
             "end_time": period.end_time.isoformat() if period else None,
+            "class_id": r.class_id,
             "class_name": cls.name if cls else None,
+            "section_id": r.section_id,
             "section_name": sec.name if sec else None,
             "group": r.group,
+            "subject_id": r.subject_id,
             "subject_name": subj.name if subj else None,
         })
 

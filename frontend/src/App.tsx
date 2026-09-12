@@ -9,10 +9,14 @@ import { StudentDashboard } from "./pages/StudentDashboard";
 import { StudentManagement } from "./pages/admin/StudentManagement";
 import { TeacherManagement } from "./pages/admin/TeacherManagement";
 import { AdminRoutinePage } from "./pages/admin/AdminRoutinePage";
+import { AdminSubjectPage } from "./pages/admin/AdminSubjectPage";
+import { TeacherDashboard } from "./pages/TeacherDashboard";
+import { TeacherAttendance } from "./pages/TeacherAttendance";
+import { TeacherAssignments } from "./pages/TeacherAssignments";
+import { StudentAssignments } from "./pages/StudentAssignments";
 import { SearchPage } from "./pages/SearchPage";
 import {
   Classes,
-  Subjects,
   AttendancePage,
   ExamsPage,
   AssignmentsPage,
@@ -34,7 +38,21 @@ function HomeRedirect() {
   const { role } = useAuth();
   if (role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
   if (role === "STUDENT") return <Navigate to="/student/dashboard" replace />;
+  if (role === "TEACHER") return <TeacherDashboard />;
   return <Dashboard />;
+}
+
+function AttendanceRouter() {
+  const { role } = useAuth();
+  if (role === "TEACHER") return <TeacherAttendance />;
+  return <AttendancePage />;
+}
+
+function AssignmentsRouter() {
+  const { role } = useAuth();
+  if (role === "TEACHER") return <TeacherAssignments />;
+  if (role === "STUDENT") return <StudentAssignments />;
+  return <AssignmentsPage />;
 }
 
 export default function App() {
@@ -49,14 +67,14 @@ export default function App() {
         <Route path="/students" element={<Shelled roles={["ADMIN"]}><StudentManagement /></Shelled>} />
         <Route path="/teachers" element={<Shelled roles={["ADMIN"]}><TeacherManagement /></Shelled>} />
         <Route path="/routines" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><AdminRoutinePage /></Shelled>} />
-        <Route path="/classes" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><Classes /></Shelled>} />
-        <Route path="/subjects" element={<Shelled roles={["ADMIN"]}><Subjects /></Shelled>} />
-        <Route path="/attendance" element={<Shelled><AttendancePage /></Shelled>} />
+        <Route path="/classes" element={<Shelled roles={["ADMIN", "STUDENT"]}><Classes /></Shelled>} />
+        <Route path="/subjects" element={<Shelled roles={["ADMIN"]}><AdminSubjectPage /></Shelled>} />
+        <Route path="/attendance" element={<Shelled><AttendanceRouter /></Shelled>} />
         <Route path="/exams" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><ExamsPage /></Shelled>} />
         <Route path="/results" element={<Shelled><ResultsPage /></Shelled>} />
         <Route path="/fees" element={<Shelled roles={["ADMIN"]}><FeesPage /></Shelled>} />
         <Route path="/reports" element={<Shelled roles={["ADMIN"]}><ReportsPage /></Shelled>} />
-        <Route path="/assignments" element={<Shelled roles={["TEACHER", "STUDENT"]}><AssignmentsPage /></Shelled>} />
+        <Route path="/assignments" element={<Shelled><AssignmentsRouter /></Shelled>} />
         <Route path="/profile" element={<Shelled roles={["STUDENT"]}><ProfilePage /></Shelled>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

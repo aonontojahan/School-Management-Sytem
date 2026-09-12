@@ -89,17 +89,14 @@ DEFAULT_DEPARTMENTS = [
 
 CLASS_NAMES = ["Nursery", "Play", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 
-# Default periods: 9:00 AM - 3:00 PM
+# Default periods: 9:00 AM - 3:00 PM, 6 hours, 6 periods (1 hour each)
 DEFAULT_PERIODS = [
-    (1, "Period 1", time(9, 0), time(9, 45)),
-    (2, "Period 2", time(9, 45), time(10, 30)),
-    (3, "Period 3", time(10, 30), time(11, 15)),
-    (4, "Period 4", time(11, 15), time(12, 0)),
-    (5, "Break", time(12, 0), time(12, 30)),
-    (6, "Period 5", time(12, 30), time(13, 15)),
-    (7, "Period 6", time(13, 15), time(14, 0)),
-    (8, "Period 7", time(14, 0), time(14, 45)),
-    (9, "Period 8", time(14, 45), time(15, 0)),
+    (1, "Period 1", time(9, 0), time(10, 0)),
+    (2, "Period 2", time(10, 0), time(11, 0)),
+    (3, "Period 3", time(11, 0), time(12, 0)),
+    (4, "Period 4", time(12, 0), time(13, 0)),
+    (5, "Period 5", time(13, 0), time(14, 0)),
+    (6, "Period 6", time(14, 0), time(15, 0)),
 ]
 
 
@@ -135,11 +132,13 @@ def seed(db: Session) -> None:
         db.add(year)
         db.flush()
 
-    # Default periods
-    for num, label, start, end in DEFAULT_PERIODS:
-        if not db.query(Period).filter(
-            Period.academic_year_id == year.id, Period.period_number == num
-        ).first():
+    # Default periods — delete old ones and recreate
+    existing_periods = db.query(Period).filter(Period.academic_year_id == year.id).all()
+    if len(existing_periods) != len(DEFAULT_PERIODS):
+        for p in existing_periods:
+            db.delete(p)
+        db.flush()
+        for num, label, start, end in DEFAULT_PERIODS:
             db.add(Period(
                 academic_year_id=year.id,
                 period_number=num,
@@ -147,6 +146,13 @@ def seed(db: Session) -> None:
                 start_time=start,
                 end_time=end,
             ))
+    else:
+        for num, label, start, end in DEFAULT_PERIODS:
+            p = db.query(Period).filter(Period.academic_year_id == year.id, Period.period_number == num).first()
+            if p and (p.start_time != start or p.end_time != end or p.label != label):
+                p.label = label
+                p.start_time = start
+                p.end_time = end
 
     # Classes + sections + subject assignments
     for sort_idx, cls_name in enumerate(CLASS_NAMES):

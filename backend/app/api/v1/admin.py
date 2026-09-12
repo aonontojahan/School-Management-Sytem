@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.models.academic import SchoolClass, Section, Subject
 from app.models.enums import PersonStatus, StudentGroup, UserRole
 from app.models.people import StudentProfile, TeacherProfile
+from app.models.routine import Period
 from app.models.user import User
 from app.schemas.students import StudentCreate, StudentOut, StudentUpdate
 from app.schemas.people import TeacherCreate, TeacherOut, TeacherUpdate
@@ -563,3 +564,230 @@ def admin_get_student_subjects(
 def admin_list_groups(user: User = Depends(require_admin)):
     """Get available student groups."""
     return [{"value": g.value, "label": g.value.replace("_", " ").title()} for g in StudentGroup]
+
+
+@router.get("/periods")
+def admin_list_periods(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    """Get all periods for the active academic year."""
+    from app.models.academic import AcademicYear
+    year = db.query(AcademicYear).filter(AcademicYear.is_active == True).first()
+    if not year:
+        year = db.query(AcademicYear).order_by(AcademicYear.id).first()
+    if not year:
+        return []
+    periods = db.query(Period).filter(Period.academic_year_id == year.id).order_by(Period.period_number).all()
+    return [{"id": p.id, "number": p.period_number, "label": p.label, "start_time": p.start_time.isoformat(), "end_time": p.end_time.isoformat()} for p in periods]
+
+
+@router.post("/subjects", status_code=status.HTTP_201_CREATED)
+def admin_create_subject(data: dict, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    name = (data.get("name") or "").strip()
+    code = (data.get("code") or "").strip()
+    if not name or not code:
+        raise HTTPException(400, "Name and code are required")
+    if db.query(Subject).filter(Subject.name == name).first():
+        raise HTTPException(400, "Subject name already exists")
+    if db.query(Subject).filter(Subject.code == code).first():
+        raise HTTPException(400, "Subject code already exists")
+    subject = Subject(name=name, code=code, description=data.get("description"))
+    db.add(subject)
+    db.commit()
+    db.refresh(subject)
+    return {"id": subject.id, "name": subject.name, "code": subject.code, "description": subject.description}
+
+
+@router.put("/subjects/{subject_id}")
+def admin_update_subject(subject_id: int, data: dict, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    subject = db.get(Subject, subject_id)
+    if not subject:
+        raise HTTPException(404, "Subject not found")
+    if "name" in data:
+        name = data["name"].strip()
+        dup = db.query(Subject).filter(Subject.name == name, Subject.id != subject_id).first()
+        if dup:
+            raise HTTPException(400, "Subject name already exists")
+        subject.name = name
+    if "code" in data:
+        code = data["code"].strip()
+        dup = db.query(Subject).filter(Subject.code == code, Subject.id != subject_id).first()
+        if dup:
+            raise HTTPException(400, "Subject code already exists")
+        subject.code = code
+    if "description" in data:
+        subject.description = data["description"]
+    db.commit()
+    db.refresh(subject)
+    return {"id": subject.id, "name": subject.name, "code": subject.code, "description": subject.description}
+
+
+@router.delete("/subjects/{subject_id}", status_code=status.HTTP_204_NO_CONTENT)
+def admin_delete_subject(subject_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    subject = db.get(Subject, subject_id)
+    if not subject:
+        raise HTTPException(404, "Subject not found")
+    db.delete(subject)
+    db.commit()
+    return None
+
+
+@router.get("/subjects/{subject_id}")
+def admin_get_subject(subject_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    subject = db.get(Subject, subject_id)
+    if not subject:
+        raise HTTPException(404, "Subject not found")
+    return {"id": subject.id, "name": subject.name, "code": subject.code, "description": subject.description}
+
+
+@router.get("/teachers/{teacher_id}/workload")
+def admin_teacher_workload(
+    teacher_id: int,
+    academic_year_id: int | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Get a teacher's weekly workload: how many classes per day, with details."""
+    from app.models.routine import Routine, Period
+
+    teacher = db.get(TeacherProfile, teacher_id)
+    if not teacher:
+        raise HTTPException(404, "Teacher not found")
+
+    query = db.query(Routine).filter(Routine.teacher_id == teacher_id)
+    if academic_year_id:
+        query = query.filter(Routine.academic_year_id == academic_year_id)
+
+    routines = query.order_by(Routine.day, Routine.period_id).all()
+
+    days = {}
+    for r in routines:
+        day_val = r.day.value if hasattr(r.day, "value") else r.day
+        if day_val not in days:
+            days[day_val] = []
+        cls = db.get(SchoolClass, r.class_id)
+        sec = db.get(Section, r.section_id)
+        subj = db.get(Subject, r.subject_id)
+        period = db.get(Period, r.period_id)
+        days[day_val].append({
+            "id": r.id,
+            "period_id": r.period_id,
+            "period_label": period.label if period else None,
+            "start_time": period.start_time.isoformat() if period else None,
+            "end_time": period.end_time.isoformat() if period else None,
+            "class_id": r.class_id,
+            "class_name": cls.name if cls else None,
+            "section_id": r.section_id,
+            "section_name": sec.name if sec else None,
+            "subject_id": r.subject_id,
+            "subject_name": subj.name if subj else None,
+        })
+
+    all_days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"]
+    summary = {}
+    for d in all_days:
+        entries = days.get(d, [])
+        summary[d] = {"count": len(entries), "entries": entries, "is_full": len(entries) >= 4}
+
+    total = sum(len(v) for v in days.values())
+    return {
+        "teacher_id": teacher_id,
+        "teacher_name": f"{teacher.first_name} {teacher.last_name}",
+        "total_classes": total,
+        "daily": summary,
+        "max_per_day": 4,
+        "max_per_week": 20,
+        "recommended_min": 0,
+    }
+
+
+@router.post("/teachers/{teacher_id}/assign-batch")
+def admin_teacher_assign_batch(
+    teacher_id: int,
+    data: dict,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Bulk assign routine entries for a teacher. Accepts {academic_year_id, assignments: [{class_id, section_id, subject_id, day, period_id, group?}]}. Validates no conflicts."""
+    from app.models.routine import Routine, Period
+    from app.models.enums import DayOfWeek
+
+    teacher = db.get(TeacherProfile, teacher_id)
+    if not teacher:
+        raise HTTPException(404, "Teacher not found")
+
+    academic_year_id = data.get("academic_year_id")
+    assignments = data.get("assignments", [])
+    if not assignments:
+        raise HTTPException(400, "No assignments provided")
+
+    created = []
+    errors = []
+    for i, a in enumerate(assignments):
+        required = ["class_id", "section_id", "subject_id", "day", "period_id"]
+        missing = [f for f in required if not a.get(f)]
+        if missing:
+            errors.append(f"Entry {i+1}: missing {', '.join(missing)}")
+            continue
+
+        day_val = a["day"]
+        if isinstance(day_val, str):
+            try:
+                day_val = DayOfWeek(day_val.upper())
+            except ValueError:
+                errors.append(f"Entry {i+1}: invalid day '{a['day']}'")
+                continue
+
+        period = db.get(Period, a["period_id"])
+        if not period:
+            errors.append(f"Entry {i+1}: period not found")
+            continue
+
+        subject = db.get(Subject, a["subject_id"])
+        if not subject:
+            errors.append(f"Entry {i+1}: subject not found")
+            continue
+
+        # Validate subject is assigned to this teacher
+        teacher_subject_ids = {s.id for s in teacher.subjects}
+        if a["subject_id"] not in teacher_subject_ids:
+            errors.append(f"Entry {i+1}: subject '{subject.name}' is not assigned to this teacher")
+            continue
+
+        class_sec_dup = db.query(Routine).filter(
+            Routine.class_id == a["class_id"],
+            Routine.section_id == a["section_id"],
+            Routine.day == day_val,
+            Routine.period_id == a["period_id"],
+        ).first()
+        if class_sec_dup:
+            errors.append(f"Entry {i+1}: class-section already has a class at {day_val.value} period {a['period_id']}")
+            continue
+
+        teacher_dup = db.query(Routine).filter(
+            Routine.teacher_id == teacher_id,
+            Routine.day == day_val,
+            Routine.period_id == a["period_id"],
+        ).first()
+        if teacher_dup:
+            errors.append(f"Entry {i+1}: you already have a class at {day_val.value} period {a['period_id']}")
+            continue
+
+        routine = Routine(
+            academic_year_id=academic_year_id,
+            class_id=a["class_id"],
+            section_id=a["section_id"],
+            group=a.get("group"),
+            day=day_val,
+            period_id=a["period_id"],
+            subject_id=a["subject_id"],
+            teacher_id=teacher_id,
+        )
+        db.add(routine)
+        db.flush()
+        created.append(routine.id)
+
+    if errors and not created:
+        db.rollback()
+        raise HTTPException(400, detail={"message": "All entries failed", "errors": errors})
+
+    db.commit()
+    return {"created": len(created), "errors": errors, "ids": created}
