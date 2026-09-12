@@ -5,6 +5,7 @@ import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { StudentDashboard } from "./pages/StudentDashboard";
 import { StudentManagement } from "./pages/admin/StudentManagement";
 import { TeacherManagement } from "./pages/admin/TeacherManagement";
 import { SearchPage } from "./pages/SearchPage";
@@ -31,6 +32,7 @@ function Shelled({ children, roles }: { children: React.ReactNode; roles?: ("ADM
 function HomeRedirect() {
   const { role } = useAuth();
   if (role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
+  if (role === "STUDENT") return <Navigate to="/student/dashboard" replace />;
   return <Dashboard />;
 }
 
@@ -42,6 +44,7 @@ export default function App() {
         <Route path="/" element={<Shelled><HomeRedirect /></Shelled>} />
         <Route path="/search" element={<Shelled><SearchPage /></Shelled>} />
         <Route path="/admin/dashboard" element={<Shelled roles={["ADMIN"]}><AdminDashboard /></Shelled>} />
+        <Route path="/student/dashboard" element={<Shelled roles={["STUDENT"]}><StudentDashboard /></Shelled>} />
         <Route path="/students" element={<Shelled roles={["ADMIN"]}><StudentManagement /></Shelled>} />
         <Route path="/teachers" element={<Shelled roles={["ADMIN"]}><TeacherManagement /></Shelled>} />
         <Route path="/classes" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><Classes /></Shelled>} />
