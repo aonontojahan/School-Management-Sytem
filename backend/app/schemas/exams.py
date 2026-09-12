@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,27 @@ class ExamOut(ExamCreate):
     id: int
 
     model_config = {"from_attributes": True}
+
+
+class ExamRoutineCreate(BaseModel):
+    exam_id: int
+    class_id: int
+    section_id: int | None = None
+    subject_id: int
+    teacher_id: int | None = None
+    exam_date: date
+    start_time: time
+    end_time: time
+    room: str | None = None
+
+
+class ExamRoutineOut(ExamRoutineCreate):
+    id: int
+    exam_name: str | None = None
+    class_name: str | None = None
+    section_name: str | None = None
+    subject_name: str | None = None
+    teacher_name: str | None = None
 
 
 class MarkIn(BaseModel):

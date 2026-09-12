@@ -15,11 +15,15 @@ import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { TeacherAttendance } from "./pages/TeacherAttendance";
 import { TeacherAssignments } from "./pages/TeacherAssignments";
 import { StudentAssignments } from "./pages/StudentAssignments";
+import { AdminExamPage } from "./pages/admin/AdminExamPage";
+import { AdminExamRoutinePage } from "./pages/admin/AdminExamRoutinePage";
+import { StudentExamsPage } from "./pages/StudentExamsPage";
+import { StudentExamRoutinePage } from "./pages/StudentExamRoutinePage";
+import { TeacherExamRoutinePage } from "./pages/TeacherExamRoutinePage";
 import { SearchPage } from "./pages/SearchPage";
 import {
   Classes,
   AttendancePage,
-  ExamsPage,
   AssignmentsPage,
   FeesPage,
   ResultsPage,
@@ -63,6 +67,20 @@ function AssignmentsRouter() {
   return <AssignmentsPage />;
 }
 
+function ExamRouter() {
+  const { role } = useAuth();
+  if (role === "ADMIN") return <AdminExamPage />;
+  if (role === "STUDENT") return <StudentExamsPage />;
+  return <StudentExamsPage />;
+}
+
+function ExamRoutineRouter() {
+  const { role } = useAuth();
+  if (role === "ADMIN") return <AdminExamRoutinePage />;
+  if (role === "TEACHER") return <TeacherExamRoutinePage />;
+  return <StudentExamRoutinePage />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -78,7 +96,8 @@ export default function App() {
         <Route path="/classes" element={<Shelled roles={["ADMIN", "STUDENT"]}><Classes /></Shelled>} />
         <Route path="/subjects" element={<Shelled roles={["ADMIN"]}><AdminSubjectPage /></Shelled>} />
         <Route path="/attendance" element={<Shelled><AttendanceRouter /></Shelled>} />
-        <Route path="/exams" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><ExamsPage /></Shelled>} />
+        <Route path="/exams" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><ExamRouter /></Shelled>} />
+        <Route path="/exam-routine" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><ExamRoutineRouter /></Shelled>} />
         <Route path="/results" element={<Shelled><ResultsPage /></Shelled>} />
         <Route path="/fees" element={<Shelled roles={["ADMIN"]}><FeesPage /></Shelled>} />
         <Route path="/reports" element={<Shelled roles={["ADMIN"]}><ReportsPage /></Shelled>} />

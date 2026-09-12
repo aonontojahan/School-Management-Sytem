@@ -37,6 +37,7 @@ const MENUS: Record<Role, MenuSection[]> = {
         { to: "/routines", label: "Class Routine", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
         { to: "/attendance", label: "Attendance", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" },
         { to: "/exams", label: "Exams", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
+        { to: "/exam-routine", label: "Exam Routine", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
         { to: "/results", label: "Results", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
       ],
     },
@@ -71,6 +72,7 @@ const MENUS: Record<Role, MenuSection[]> = {
       title: "Assessments",
       items: [
         { to: "/exams", label: "Exams", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
+        { to: "/exam-routine", label: "Exam Routine", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
         { to: "/results", label: "Results", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
       ],
     },
@@ -93,6 +95,7 @@ const MENUS: Record<Role, MenuSection[]> = {
       title: "Assessments",
       items: [
         { to: "/exams", label: "Exams", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
+        { to: "/exam-routine", label: "Exam Routine", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
         { to: "/results", label: "Results", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
       ],
     },
@@ -196,13 +199,19 @@ function NotificationBell() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const { data: assignments } = useQuery({
+  const { data: notifications } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => (await api.get("/notifications")).data as { id: number; title: string; message: string; type: string; is_read: boolean; created_at: string }[],
+  });
+
+  const { data: pendingAssignments } = useQuery({
     queryKey: ["student-assignments-notify"],
     queryFn: async () => (await api.get("/assignments/my")).data as { id: number; title: string; status: string; subject_name: string; due_date: string | null }[],
   });
 
-  const pending = assignments?.filter(a => a.status === "PENDING" || a.status === "MISSING") || [];
-  const count = pending.length;
+  const unreadNotifs = notifications?.filter(n => !n.is_read) || [];
+  const pending = pendingAssignments?.filter(a => a.status === "PENDING" || a.status === "MISSING") || [];
+  const count = unreadNotifs.length + pending.length;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -230,10 +239,22 @@ function NotificationBell() {
           <div className="px-4 py-3 border-b border-slate-100">
             <p className="text-sm font-bold text-slate-900">Notifications</p>
           </div>
-          {pending.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-slate-500">No pending assignments</div>
+          {count === 0 ? (
+            <div className="px-4 py-6 text-center text-sm text-slate-500">No new notifications</div>
           ) : (
             <div className="py-1">
+              {unreadNotifs.map(n => (
+                <div
+                  key={n.id}
+                  className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition border-b border-slate-50 last:border-0"
+                >
+                  <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.type === "EXAM" ? "bg-indigo-500" : "bg-amber-500"}`} />
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{n.title}</p>
+                    <p className="text-xs text-slate-500">{n.message}</p>
+                  </div>
+                </div>
+              ))}
               {pending.map(a => (
                 <Link
                   key={a.id}

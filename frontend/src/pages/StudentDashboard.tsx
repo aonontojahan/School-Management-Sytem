@@ -35,6 +35,16 @@ interface Exam {
   total_marks: number;
 }
 
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  ref_id: number | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 interface Assignment {
   id: number;
   title: string;
@@ -96,6 +106,11 @@ export function StudentDashboard() {
     queryFn: async () => (await api.get("/dashboard/student")).data as StudentDashboardData,
   });
 
+  const { data: notifications } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => (await api.get("/notifications")).data as Notification[],
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -144,6 +159,29 @@ export function StudentDashboard() {
           {profile.group && <><span>•</span><span>Group: {profile.group.replace("_", " ")}</span></>}
         </div>
       </div>
+
+      {/* Exam Notifications */}
+      {notifications && notifications.filter(n => n.type === "EXAM" && !n.is_read).length > 0 && (
+        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5">
+          <h3 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            New Exam Notifications
+          </h3>
+          <div className="space-y-2">
+            {notifications.filter(n => n.type === "EXAM" && !n.is_read).slice(0, 3).map((n) => (
+              <div key={n.id} className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-slate-900">{n.title}</p>
+                  <p className="text-[11px] text-slate-500">{n.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
