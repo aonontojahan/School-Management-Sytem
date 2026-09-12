@@ -220,6 +220,18 @@ def admin_list_teachers(
     return query.order_by(TeacherProfile.id).offset(skip).limit(limit).all()
 
 
+@router.get("/departments")
+def admin_list_departments(db: Session = Depends(get_db), user: User = Depends(require_admin)):
+    rows = (
+        db.query(TeacherProfile.department)
+        .filter(TeacherProfile.department.isnot(None), TeacherProfile.department != "")
+        .distinct()
+        .order_by(TeacherProfile.department)
+        .all()
+    )
+    return [r[0] for r in rows]
+
+
 @router.get("/students/{student_id}", response_model=StudentOut)
 def admin_get_student(student_id: int, db: Session = Depends(get_db), user: User = Depends(require_admin)):
     student = db.get(StudentProfile, student_id)

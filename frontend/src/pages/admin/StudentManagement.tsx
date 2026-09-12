@@ -394,58 +394,84 @@ export function StudentManagement() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h2 className="text-2xl font-extrabold text-slate-900">Students</h2>
-        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-          {students?.length ?? 0}
-        </span>
-        <div className="ml-auto">
-          <button
-            onClick={() => { setForm(emptyForm); setCreateOpen(true); }}
-            className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition"
-          >
-            + New Student
-          </button>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-extrabold text-slate-900">Students</h2>
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+            {students?.length ?? 0}
+          </span>
         </div>
+        <button
+          onClick={() => { setForm(emptyForm); setCreateOpen(true); }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm shadow-indigo-200 transition"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Student
+        </button>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
-        <input
-          type="text"
-          placeholder="Search students…"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-        <select
-          value={filterClass}
-          onChange={(e) => { setFilterClass(e.target.value ? Number(e.target.value) : ""); setPage(0); }}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">All Classes</option>
-          {classes?.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => { setFilterStatus(e.target.value); setPage(0); }}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-        </select>
-        <select
-          value={filterDivision}
-          onChange={(e) => { setFilterDivision(e.target.value); setPage(0); }}
-          className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">All Divisions</option>
-          {DIVISIONS.map((d) => (
-            <option key={d} value={d}>{d}</option>
-          ))}
-        </select>
+      {/* Filter Bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-3">
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              className="w-full pl-10 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition placeholder:text-slate-400"
+            />
+          </div>
+
+          <div className="h-6 w-px bg-slate-200" />
+
+          <select
+            value={filterClass}
+            onChange={(e) => { setFilterClass(e.target.value ? Number(e.target.value) : ""); setPage(0); }}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition"
+          >
+            <option value="">All Classes</option>
+            {classes?.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setPage(0); }}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition"
+          >
+            <option value="">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+
+          <select
+            value={filterDivision}
+            onChange={(e) => { setFilterDivision(e.target.value); setPage(0); }}
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition"
+          >
+            <option value="">All Divisions</option>
+            {DIVISIONS.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+
+          {(search || filterClass || filterStatus || filterDivision) && (
+            <button
+              onClick={() => { setSearch(""); setFilterClass(""); setFilterStatus(""); setFilterDivision(""); setPage(0); }}
+              className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1.5 rounded-lg transition"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
