@@ -71,3 +71,9 @@ class StudentGroup(str, enum.Enum):
     SCIENCE = "SCIENCE"
     HUMANITIES = "HUMANITIES"
     BUSINESS_STUDIES = "BUSINESS_STUDIES"
+
+
+class SalaryStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    PAID = "PAID"
+    OVERDUE = "OVERDUE"

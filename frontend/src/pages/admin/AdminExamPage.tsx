@@ -47,7 +47,7 @@ export function AdminExamPage() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
-    name: "", exam_type: "CLASS_TEST", class_id: "",
+    exam_type: "CLASS_TEST", class_id: "",
     total_marks: "100", passing_marks: "33", start_date: "", end_date: "",
   });
 
@@ -74,7 +74,7 @@ export function AdminExamPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-exams"] });
       setShowForm(false);
-      setForm({ name: "", exam_type: "CLASS_TEST", class_id: "", total_marks: "100", passing_marks: "33", start_date: "", end_date: "" });
+      setForm({ exam_type: "CLASS_TEST", class_id: "", total_marks: "100", passing_marks: "33", start_date: "", end_date: "" });
     },
   });
 
@@ -84,10 +84,11 @@ export function AdminExamPage() {
   });
 
   const handleSubmit = () => {
-    if (!form.name.trim() || !form.class_id) return;
+    if (!form.class_id) return;
     const activeYear = academicYears && academicYears.length > 0 ? academicYears[academicYears.length - 1] : null;
+    const examTypeLabel = EXAM_TYPES.find((t) => t.value === form.exam_type)?.label || form.exam_type;
     createMutation.mutate({
-      name: form.name.trim(),
+      name: examTypeLabel,
       exam_type: form.exam_type,
       class_id: Number(form.class_id),
       academic_year_id: activeYear?.id || 1,
@@ -116,12 +117,6 @@ export function AdminExamPage() {
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <h3 className="text-sm font-bold text-slate-700 mb-4">Create Exam</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Exam Name *</label>
-              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="e.g. Mid Term Examination 2026"
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-            </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Exam Type *</label>
               <select value={form.exam_type} onChange={(e) => setForm({ ...form, exam_type: e.target.value })}
@@ -160,7 +155,7 @@ export function AdminExamPage() {
           </div>
           <div className="flex justify-end mt-4 gap-3">
             <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
-            <button onClick={handleSubmit} disabled={!form.name.trim() || !form.class_id || createMutation.isPending}
+            <button onClick={handleSubmit} disabled={!form.class_id || createMutation.isPending}
               className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
               {createMutation.isPending ? "Creating..." : "Create Exam"}
             </button>

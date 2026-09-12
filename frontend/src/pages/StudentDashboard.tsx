@@ -58,6 +58,17 @@ interface Assignment {
   subject_id: number;
 }
 
+interface FeeInvoice {
+  id: number;
+  fee_type_name: string | null;
+  total_amount: number;
+  paid_amount: number;
+  due_amount: number;
+  due_date: string | null;
+  status: string;
+  payments: { amount: number; method: string; paid_at: string | null }[];
+}
+
 interface RoutineEntry {
   day: string;
   period_label: string | null;
@@ -119,6 +130,16 @@ export function StudentDashboard() {
   const { data: examRoutines } = useQuery({
     queryKey: ["student-exam-routines"],
     queryFn: async () => (await api.get("/exams/routines")).data as ExamRoutine[],
+  });
+
+  const { data: feeData } = useQuery({
+    queryKey: ["student-fees"],
+    queryFn: async () => {
+      const res = await api.get("/fees/my-invoices");
+      const invoices = res.data as FeeInvoice[];
+      const total_pending = invoices.filter(i => i.status !== "PAID").reduce((sum, i) => sum + (i.total_amount - i.paid_amount), 0);
+      return { invoices, total_pending };
+    },
   });
 
   if (isLoading) {
@@ -189,6 +210,49 @@ export function StudentDashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fee Notifications */}
+      {notifications && notifications.filter(n => n.type === "FEE" && !n.is_read).length > 0 && (
+        <div className="bg-rose-50 rounded-2xl border border-rose-200 p-5">
+          <h3 className="text-sm font-bold text-rose-800 mb-3 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            Fee Notifications
+          </h3>
+          <div className="space-y-2">
+            {notifications.filter(n => n.type === "FEE" && !n.is_read).slice(0, 3).map((n) => (
+              <div key={n.id} className="flex items-start gap-2 p-2 bg-white rounded-lg">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-slate-900">{n.title}</p>
+                  <p className="text-[11px] text-slate-500">{n.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fee Summary */}
+      {feeData && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-700">Fee Summary</h3>
+            <a href="/fees" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View All →</a>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+              <p className="text-xs font-semibold text-emerald-600">Total Pending</p>
+              <p className="text-2xl font-extrabold text-emerald-700 mt-1">${feeData.total_pending.toLocaleString()}</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <p className="text-xs font-semibold text-slate-600">Total Invoices</p>
+              <p className="text-2xl font-extrabold text-slate-700 mt-1">{feeData.invoices?.length || 0}</p>
+            </div>
           </div>
         </div>
       )}

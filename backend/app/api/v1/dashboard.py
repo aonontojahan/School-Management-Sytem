@@ -1,5 +1,5 @@
-"""Role-aware dashboards + reports (counts only, no extra modules)."""
-from datetime import date, timedelta
+"""Role-aware dashboards + reports + financial analytics."""
+from datetime import date, datetime, timedelta
 from calendar import month_name
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, and_, extract
@@ -11,10 +11,10 @@ from app.models.assignment import Assignment
 from app.models.attendance import Attendance
 from app.models.exam import Exam, Mark
 from app.models.academic import SchoolClass, Section, Subject
-from app.models.fee import FeeInvoice
+from app.models.fee import FeeInvoice, FeePayment, FeeType
 from app.models.people import StudentProfile, TeacherProfile
 from app.models.user import User
-from app.models.enums import PersonStatus, AttendanceStatus, ExamType
+from app.models.enums import PersonStatus, AttendanceStatus, ExamType, SalaryStatus
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -373,3 +373,217 @@ def student_dashboard(db: Session = Depends(get_db), user: User = Depends(get_cu
         ],
         "routine": routine,
     }
+
+
+# ── Financial Reports ───────────────────────────────────────────────────────
+
+
+@router.get("/financial-summary", dependencies=[Depends(require_admin)])
+def financial_summary(month: int | None = None, year: int | None = None, db: Session = Depends(get_db)):
+    today = date.today()
+    m = month or today.month
+    y = year or today.year
+
+    start = date(y, m, 1)
+    if m == 12:
+        end = date(y, 12, 31)
+    else:
+        end = date(y, m + 1, 1) - timedelta(days=1)
+
+    total_fee_collected = db.query(func.coalesce(func.sum(FeePayment.amount), 0)).filter(
+        and_(FeePayment.paid_at >= start, FeePayment.paid_at <= end)
+    ).scalar()
+
+    total_salary_paid = 0
+    try:
+        from app.models.salary import SalaryPayment
+        total_salary_paid = db.query(func.coalesce(func.sum(SalaryPayment.amount), 0)).filter(
+            and_(
+                SalaryPayment.status == SalaryStatus.PAID,
+                SalaryPayment.paid_at >= start,
+                SalaryPayment.paid_at <= end,
+            )
+        ).scalar() or 0
+    except Exception:
+        pass
+
+    pending_fees = db.query(func.count(FeeInvoice.id)).filter(FeeInvoice.status == "PENDING").scalar() or 0
+    overdue_fees = db.query(func.count(FeeInvoice.id)).filter(FeeInvoice.status == "OVERDUE").scalar() or 0
+    total_invoices = db.query(func.count(FeeInvoice.id)).scalar() or 0
+    total_paid_invoices = db.query(func.count(FeeInvoice.id)).filter(FeeInvoice.status == "PAID").scalar() or 0
+
+    return {
+        "month": m,
+        "year": y,
+        "month_name": month_name[m],
+        "fee_collected": float(total_fee_collected),
+        "salary_paid": float(total_salary_paid),
+        "revenue": float(total_fee_collected) - float(total_salary_paid),
+        "pending_fees": pending_fees,
+        "overdue_fees": overdue_fees,
+        "total_invoices": total_invoices,
+        "paid_invoices": total_paid_invoices,
+    }
+
+
+@router.get("/monthly-revenue", dependencies=[Depends(require_admin)])
+def monthly_revenue(year: int | None = None, db: Session = Depends(get_db)):
+    y = year or date.today().year
+    months = []
+    for m in range(1, 13):
+        start = date(y, m, 1)
+        if m == 12:
+            end = date(y, 12, 31)
+        else:
+            end = date(y, m + 1, 1) - timedelta(days=1)
+
+        fee = db.query(func.coalesce(func.sum(FeePayment.amount), 0)).filter(
+            and_(FeePayment.paid_at >= start, FeePayment.paid_at <= end)
+        ).scalar() or 0
+
+        salary = 0
+        try:
+            from app.models.salary import SalaryPayment
+            salary = db.query(func.coalesce(func.sum(SalaryPayment.amount), 0)).filter(
+                and_(
+                    SalaryPayment.status == SalaryStatus.PAID,
+                    SalaryPayment.paid_at >= start,
+                    SalaryPayment.paid_at <= end,
+                )
+            ).scalar() or 0
+        except Exception:
+            pass
+
+        months.append({
+            "month": month_name[m][:3],
+            "month_full": month_name[m],
+            "fee_collected": float(fee),
+            "salary_paid": float(salary),
+            "revenue": float(fee) - float(salary),
+        })
+    return months
+
+
+@router.get("/yearly-revenue", dependencies=[Depends(require_admin)])
+def yearly_revenue(db: Session = Depends(get_db)):
+    current_year = date.today().year
+    years = []
+    for y in range(current_year - 4, current_year + 1):
+        fee = db.query(func.coalesce(func.sum(FeePayment.amount), 0)).filter(
+            and_(extract("year", FeePayment.paid_at) == y)
+        ).scalar() or 0
+
+        salary = 0
+        try:
+            from app.models.salary import SalaryPayment
+            salary = db.query(func.coalesce(func.sum(SalaryPayment.amount), 0)).filter(
+                and_(extract("year", SalaryPayment.paid_at) == y, SalaryPayment.status == SalaryStatus.PAID)
+            ).scalar() or 0
+        except Exception:
+            pass
+
+        years.append({
+            "year": y,
+            "fee_collected": float(fee),
+            "salary_paid": float(salary),
+            "revenue": float(fee) - float(salary),
+        })
+    return years
+
+
+# ── Monthly Auto-Generate (Cron Target) ─────────────────────────────────────
+
+
+@router.post("/generate-monthly", dependencies=[Depends(require_admin)])
+def generate_monthly_records(db: Session = Depends(get_db)):
+    """Auto-generate tuition fee invoices for all active students + salary records for all teachers.
+    Intended to run on the 30th of each month via APScheduler."""
+    today = date.today()
+    m = today.month
+    y = today.year
+    results = {"fees_generated": 0, "salaries_generated": 0}
+
+    # 1. Generate tuition fee invoices for all active students
+    tuition_fee_type = db.query(FeeType).filter(FeeType.name == "TUITION").first()
+    if tuition_fee_type:
+        students = db.query(StudentProfile).filter(StudentProfile.status == PersonStatus.ACTIVE).all()
+        for s in students:
+            existing = db.query(FeeInvoice).filter(
+                FeeInvoice.student_id == s.id,
+                FeeInvoice.fee_type_id == tuition_fee_type.id,
+                extract("month", FeeInvoice.due_date) == m,
+                extract("year", FeeInvoice.due_date) == y,
+            ).first()
+            if existing:
+                continue
+            inv = FeeInvoice(
+                student_id=s.id,
+                fee_type_id=tuition_fee_type.id,
+                total_amount=0,
+                paid_amount=0,
+                due_date=date(y, m, 28),
+                status="PENDING",
+            )
+            db.add(inv)
+            results["fees_generated"] += 1
+
+    # 2. Generate salary payments for all teachers with salary structures
+    try:
+        from app.models.salary import SalaryPayment, SalaryStructure
+        structures = db.query(SalaryStructure).all()
+        for st in structures:
+            existing = db.query(SalaryPayment).filter(
+                SalaryPayment.salary_structure_id == st.id,
+                SalaryPayment.month == m,
+                SalaryPayment.year == y,
+            ).first()
+            if existing:
+                continue
+            payment = SalaryPayment(
+                salary_structure_id=st.id,
+                teacher_id=st.teacher_id,
+                month=m,
+                year=y,
+                amount=float(st.monthly_amount),
+                status=SalaryStatus.PENDING,
+            )
+            db.add(payment)
+            results["salaries_generated"] += 1
+    except Exception:
+        pass
+
+    db.commit()
+
+    # 3. Send notifications
+    from app.models.notification import Notification
+    from app.models.user import User as UserModel
+    from app.models.enums import UserRole
+
+    month_names = ["", "January", "February", "March", "April", "May", "June",
+                   "July", "August", "September", "October", "November", "December"]
+    month_name_str = month_names[m]
+
+    # Notify students about tuition fees
+    student_users = db.query(UserModel).filter(UserModel.role == UserRole.STUDENT, UserModel.is_active == True).all()
+    for su in student_users:
+        n = Notification(
+            user_id=su.id,
+            title=f"Tuition Fee: {month_name_str} {y}",
+            message=f"Your tuition fee for {month_name_str} {y} has been generated. Please check your fees page.",
+            type="FEE",
+        )
+        db.add(n)
+
+    # Notify teachers about salary
+    teacher_users = db.query(UserModel).filter(UserModel.role == UserRole.TEACHER, UserModel.is_active == True).all()
+    for tu in teacher_users:
+        n = Notification(
+            user_id=tu.id,
+            title=f"Salary Processed: {month_name_str} {y}",
+            message=f"Your salary for {month_name_str} {y} has been processed. Check your salary page.",
+            type="SALARY",
+        )
+        db.add(n)
+
+    db.commit()
+    return results

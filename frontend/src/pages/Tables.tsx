@@ -76,8 +76,6 @@ export const Subjects = () => <Table title="Subjects" endpoint="/academic/subjec
 export const AttendancePage = () => <Table title="Attendance" endpoint="/attendance" />;
 export const ExamsPage = () => <Table title="Exams" endpoint="/exams" />;
 export const AssignmentsPage = () => <Table title="Assignments" endpoint="/assignments" />;
-export const FeesPage = () => <Table title="Fee Invoices" endpoint="/fees/invoices" hint="Total, paid and due amounts update automatically with each payment." />;
 export const ResultsPage = () => <Table title="Results" endpoint="/exams" hint="Open an exam to see subject-wise marks, grades and GPA." />;
-export const ReportsPage = () => <Table title="Reports" endpoint="/dashboard/summary" />;
 export const ChildrenPage = () => <Table title="My Children" endpoint="/guardians" />;
 export const ProfilePage = () => <Table title="My Profile" endpoint="/auth/me" />;

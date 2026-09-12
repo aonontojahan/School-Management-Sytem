@@ -12,6 +12,7 @@ from app.models.enums import (  # noqa: F401
     InvoiceStatus,
     PaymentMethod,
     PersonStatus,
+    SalaryStatus,
     StudentGroup,
     UserRole,
 )
@@ -20,4 +21,5 @@ from app.models.fee import FeeInvoice, FeePayment, FeeType  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.people import StudentProfile, TeacherProfile  # noqa: F401
 from app.models.routine import Period, Routine  # noqa: F401
+from app.models.salary import SalaryPayment, SalaryStructure  # noqa: F401
 from app.models.user import RefreshToken, User  # noqa: F401
