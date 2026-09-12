@@ -18,6 +18,8 @@ class Exam(Base):
     class_id: Mapped[int] = mapped_column(ForeignKey("classes.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(128))  # e.g. "Mid Term Examination"
     exam_type: Mapped[ExamType] = mapped_column()
+    total_marks: Mapped[int] = mapped_column(default=100)
+    passing_marks: Mapped[int] = mapped_column(default=33)
     start_date: Mapped[date | None] = mapped_column(Date)
     end_date: Mapped[date | None] = mapped_column(Date)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
@@ -41,6 +43,7 @@ class Mark(Base):
     marks_obtained: Mapped[float] = mapped_column(Float)  # 0-100
     grade: Mapped[str] = mapped_column(String(4))  # A+, A, A-, B, C, D, F (computed)
     gpa_point: Mapped[float] = mapped_column(Float)  # computed
+    remarks: Mapped[str | None] = mapped_column(String(500))  # teacher comments
     graded_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

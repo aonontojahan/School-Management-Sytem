@@ -44,6 +44,7 @@ def upsert_marks(exam_id: int, data: MarkBulkIn, db: Session = Depends(get_db), 
             existing.marks_obtained = m.marks_obtained
             existing.grade = grade
             existing.gpa_point = gpa
+            existing.remarks = m.remarks
             existing.graded_by = user.id
             out.append(existing)
         else:
@@ -54,6 +55,7 @@ def upsert_marks(exam_id: int, data: MarkBulkIn, db: Session = Depends(get_db), 
                 marks_obtained=m.marks_obtained,
                 grade=grade,
                 gpa_point=gpa,
+                remarks=m.remarks,
                 graded_by=user.id,
             )
             db.add(row)
@@ -75,12 +77,13 @@ def report_card(exam_id: int, student_id: int, db: Session = Depends(get_db), us
     if not student:
         raise HTTPException(404, "Student not found")
     marks = db.query(Mark).filter(Mark.exam_id == exam_id, Mark.student_id == student_id).all()
+    exam = db.get(Exam, exam_id)
     rows = []
     for mk in marks:
         subj = db.get(Subject, mk.subject_id)
-        rows.append(ReportCardRow(subject_id=mk.subject_id, subject_name=subj.name if subj else "?", marks=mk.marks_obtained, grade=mk.grade))
+        rows.append(ReportCardRow(subject_id=mk.subject_id, subject_name=subj.name if subj else "?", marks=mk.marks_obtained, grade=mk.grade, remarks=mk.remarks))
     summary = summarize([m.marks_obtained for m in marks])
-    total_possible = len(marks) * 100 if marks else 0
+    total_possible = len(marks) * (exam.total_marks if exam else 100) if marks else 0
     pct = round(summary["total"] / total_possible * 100, 2) if total_possible else 0.0
     return ReportCardOut(
         student_id=student_id,

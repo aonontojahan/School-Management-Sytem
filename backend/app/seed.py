@@ -18,14 +18,48 @@ from app.models.fee import FeeType
 from app.models.user import User
 
 DEFAULT_SUBJECTS = [
+    ("Bangla 1st Paper", "BAN1"),
+    ("Bangla 2nd Paper", "BAN2"),
+    ("English 1st Paper", "ENG1"),
+    ("English 2nd Paper", "ENG2"),
     ("Mathematics", "MATH"),
-    ("English", "ENG"),
+    ("Science", "SCI"),
     ("Physics", "PHY"),
     ("Chemistry", "CHEM"),
     ("Biology", "BIO"),
-    ("ICT", "ICT"),
-    ("Bangla", "BAN"),
+    ("Higher Mathematics", "HMATH"),
+    ("Bangladesh & Global Studies", "BGS"),
+    ("History of Bangladesh & World Civilization", "HIST"),
+    ("Geography & Environment", "GEO"),
+    ("Civics & Citizenship", "CIV"),
+    ("Economics", "ECON"),
+    ("Accounting", "ACC"),
+    ("Finance & Banking", "FIN"),
+    ("Business Entrepreneurship", "BEnt"),
+    ("Information & Communication Technology", "ICT"),
+    ("Religion & Moral Education", "REL"),
+    ("Physical Education, Health Science & Sports", "PE"),
+    ("Career Education", "Career"),
+    ("Arts & Crafts", "Art"),
 ]
+
+DEFAULT_DEPARTMENTS = [
+    "Science",
+    "Mathematics",
+    "Bangla",
+    "English",
+    "Humanities",
+    "Business Studies",
+    "ICT",
+    "Religion",
+    "Physical Education",
+    "Career Education",
+    "Arts & Crafts",
+]
+
+PERIODS_PER_DAY = 6
+CLASSES = [6, 7, 8, 9]
+MAX_PERIODS_PER_TEACHER = 4
 
 
 def seed(db: Session) -> None:

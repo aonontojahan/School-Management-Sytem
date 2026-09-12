@@ -1,7 +1,7 @@
 """Attendance model."""
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -18,6 +18,7 @@ class Attendance(Base):
     section_id: Mapped[int | None] = mapped_column(ForeignKey("sections.id", ondelete="SET NULL"))
     date: Mapped[date] = mapped_column(Date, index=True)
     status: Mapped[AttendanceStatus] = mapped_column(default=AttendanceStatus.PRESENT)
+    period: Mapped[int | None] = mapped_column(Integer)  # 1-6, NULL = full day
     marked_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

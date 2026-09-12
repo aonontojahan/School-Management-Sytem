@@ -10,6 +10,8 @@ class ExamCreate(BaseModel):
     class_id: int
     name: str
     exam_type: ExamType
+    total_marks: int = Field(100, ge=1)
+    passing_marks: int = Field(33, ge=1)
     start_date: date | None = None
     end_date: date | None = None
 
@@ -24,6 +26,7 @@ class MarkIn(BaseModel):
     student_id: int
     subject_id: int
     marks_obtained: float = Field(ge=0, le=100)
+    remarks: str | None = None
 
 
 class MarkBulkIn(BaseModel):
@@ -38,6 +41,7 @@ class MarkOut(BaseModel):
     marks_obtained: float
     grade: str
     gpa_point: float
+    remarks: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -47,6 +51,7 @@ class ReportCardRow(BaseModel):
     subject_name: str
     marks: float
     grade: str
+    remarks: str | None = None
 
 
 class ReportCardOut(BaseModel):

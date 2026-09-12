@@ -221,15 +221,9 @@ def admin_list_teachers(
 
 
 @router.get("/departments")
-def admin_list_departments(db: Session = Depends(get_db), user: User = Depends(require_admin)):
-    rows = (
-        db.query(TeacherProfile.department)
-        .filter(TeacherProfile.department.isnot(None), TeacherProfile.department != "")
-        .distinct()
-        .order_by(TeacherProfile.department)
-        .all()
-    )
-    return [r[0] for r in rows]
+def admin_list_departments(user: User = Depends(require_admin)):
+    from app.seed import DEFAULT_DEPARTMENTS
+    return DEFAULT_DEPARTMENTS
 
 
 @router.get("/students/{student_id}", response_model=StudentOut)

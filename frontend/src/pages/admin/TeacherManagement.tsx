@@ -5,6 +5,20 @@ import { Modal } from "../../components/ui/Modal";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { useToast } from "../../components/ui/Toast";
 
+const DEPARTMENTS = [
+  "Science",
+  "Mathematics",
+  "Bangla",
+  "English",
+  "Humanities",
+  "Business Studies",
+  "ICT",
+  "Religion",
+  "Physical Education",
+  "Career Education",
+  "Arts & Crafts",
+];
+
 interface Teacher {
   id: number;
   teacher_code: string;
@@ -299,7 +313,21 @@ export function TeacherManagement() {
           <InputField label="Initial Password" name="initial_password" type="password" value={data.initial_password} onChange={(v) => onChange({ ...data, initial_password: v })} />
         )}
         <InputField label="Phone" name="phone" value={data.phone} onChange={(v) => onChange({ ...data, phone: v })} />
-        <InputField label="Department" name="department" value={data.department} onChange={(v) => onChange({ ...data, department: v })} />
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Department <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={data.department}
+            onChange={(e) => onChange({ ...data, department: e.target.value })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          >
+            <option value="">Select Department</option>
+            {DEPARTMENTS.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
         <InputField label="Designation" name="designation" value={data.designation} onChange={(v) => onChange({ ...data, designation: v })} />
         <InputField label="Joining Date" name="joining_date" type="date" value={data.joining_date} onChange={(v) => onChange({ ...data, joining_date: v })} />
       </div>

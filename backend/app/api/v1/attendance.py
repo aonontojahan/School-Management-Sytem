@@ -28,6 +28,7 @@ def mark_bulk(data: AttendanceBulkIn, db: Session = Depends(get_db), user: User 
             existing.status = rec.status
             existing.class_id = data.class_id
             existing.section_id = data.section_id
+            existing.period = rec.period
             existing.marked_by = user.id
             out.append(existing)
         else:
@@ -37,6 +38,7 @@ def mark_bulk(data: AttendanceBulkIn, db: Session = Depends(get_db), user: User 
                 section_id=data.section_id,
                 date=data.date,
                 status=rec.status,
+                period=rec.period,
                 marked_by=user.id,
             )
             db.add(row)
