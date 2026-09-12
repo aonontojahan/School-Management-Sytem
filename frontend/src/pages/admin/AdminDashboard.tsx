@@ -27,39 +27,19 @@ interface AdminStats {
 
 interface MonthlyData {
   month: string;
+  month_full: string;
   present: number;
   absent: number;
+  total: number;
 }
 
 interface ClassAttendance {
   class_name: string;
+  class_code: string;
   present: number;
   absent: number;
+  total: number;
 }
-
-const MONTHS_DATA: MonthlyData[] = [
-  { month: "Jan", present: 1850, absent: 150 },
-  { month: "Feb", present: 1920, absent: 130 },
-  { month: "Mar", present: 1780, absent: 220 },
-  { month: "Apr", present: 1900, absent: 100 },
-  { month: "May", present: 1870, absent: 130 },
-  { month: "Jun", present: 1950, absent: 100 },
-  { month: "Jul", present: 1800, absent: 200 },
-  { month: "Aug", present: 1880, absent: 120 },
-  { month: "Sep", present: 1910, absent: 90 },
-  { month: "Oct", present: 1860, absent: 140 },
-  { month: "Nov", present: 1930, absent: 70 },
-  { month: "Dec", present: 1890, absent: 110 },
-];
-
-const CLASS_DATA: ClassAttendance[] = [
-  { class_name: "Class 1", present: 45, absent: 5 },
-  { class_name: "Class 2", present: 42, absent: 8 },
-  { class_name: "Class 3", present: 48, absent: 2 },
-  { class_name: "Class 4", present: 40, absent: 10 },
-  { class_name: "Class 5", present: 44, absent: 6 },
-  { class_name: "Class 6", present: 47, absent: 3 },
-];
 
 function StatCard({ label, value, sub, icon, color }: {
   label: string;
@@ -91,16 +71,15 @@ function MonthlyAttendanceLineChart({ data }: { data: MonthlyData[] }) {
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
-  const maxPresent = Math.max(...data.map((d) => d.present));
-  const maxAbsent = Math.max(...data.map((d) => d.absent));
+  const maxPresent = Math.max(...data.map((d) => d.present), 1);
+  const maxAbsent = Math.max(...data.map((d) => d.absent), 1);
   const maxVal = Math.max(maxPresent, maxAbsent);
 
-  const toX = (i: number) => padding.left + (i / (data.length - 1)) * chartW;
-  const toYPresent = (v: number) => padding.top + chartH - (v / maxVal) * chartH;
-  const toYAbsent = (v: number) => padding.top + chartH - (v / maxVal) * chartH;
+  const toX = (i: number) => padding.left + (i / Math.max(data.length - 1, 1)) * chartW;
+  const toY = (v: number) => padding.top + chartH - (v / maxVal) * chartH;
 
-  const presentPoints = data.map((d, i) => `${toX(i)},${toYPresent(d.present)}`).join(" ");
-  const absentPoints = data.map((d, i) => `${toX(i)},${toYAbsent(d.absent)}`).join(" ");
+  const presentPoints = data.map((d, i) => `${toX(i)},${toY(d.present)}`).join(" ");
+  const absentPoints = data.map((d, i) => `${toX(i)},${toY(d.absent)}`).join(" ");
 
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((p) => Math.round(maxVal * p));
 
@@ -113,117 +92,129 @@ function MonthlyAttendanceLineChart({ data }: { data: MonthlyData[] }) {
           <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-red-400 rounded" /> Absent</span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-        {/* Grid lines */}
-        {yTicks.map((tick, i) => (
-          <g key={i}>
-            <line
-              x1={padding.left}
-              y1={toYPresent(tick)}
-              x2={width - padding.right}
-              y2={toYPresent(tick)}
-              stroke="#e2e8f0"
-              strokeDasharray="4 4"
-            />
-            <text x={padding.left - 8} y={toYPresent(tick) + 4} textAnchor="end" className="fill-slate-400 text-[10px]">
-              {tick}
+      {data.every((d) => d.total === 0) ? (
+        <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+          No attendance data recorded yet
+        </div>
+      ) : (
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+          {/* Grid lines */}
+          {yTicks.map((tick, i) => (
+            <g key={i}>
+              <line
+                x1={padding.left}
+                y1={toY(tick)}
+                x2={width - padding.right}
+                y2={toY(tick)}
+                stroke="#e2e8f0"
+                strokeDasharray="4 4"
+              />
+              <text x={padding.left - 8} y={toY(tick) + 4} textAnchor="end" className="fill-slate-400 text-[10px]">
+                {tick}
+              </text>
+            </g>
+          ))}
+          {/* X-axis labels */}
+          {data.map((d, i) => (
+            <text key={i} x={toX(i)} y={height - 8} textAnchor="middle" className="fill-slate-400 text-[10px]">
+              {d.month}
             </text>
-          </g>
-        ))}
-        {/* X-axis labels */}
-        {data.map((d, i) => (
-          <text key={i} x={toX(i)} y={height - 8} textAnchor="middle" className="fill-slate-400 text-[10px]">
-            {d.month}
-          </text>
-        ))}
-        {/* Present line */}
-        <polyline
-          points={presentPoints}
-          fill="none"
-          stroke="#6366f1"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Present dots */}
-        {data.map((d, i) => (
-          <circle key={`p-${i}`} cx={toX(i)} cy={toYPresent(d.present)} r="4" fill="#6366f1" stroke="white" strokeWidth="2" />
-        ))}
-        {/* Absent line */}
-        <polyline
-          points={absentPoints}
-          fill="none"
-          stroke="#f87171"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Absent dots */}
-        {data.map((d, i) => (
-          <circle key={`a-${i}`} cx={toX(i)} cy={toYAbsent(d.absent)} r="4" fill="#f87171" stroke="white" strokeWidth="2" />
-        ))}
-      </svg>
+          ))}
+          {/* Present line */}
+          <polyline
+            points={presentPoints}
+            fill="none"
+            stroke="#6366f1"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Present dots */}
+          {data.map((d, i) => (
+            <circle key={`p-${i}`} cx={toX(i)} cy={toY(d.present)} r="4" fill="#6366f1" stroke="white" strokeWidth="2" />
+          ))}
+          {/* Absent line */}
+          <polyline
+            points={absentPoints}
+            fill="none"
+            stroke="#f87171"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Absent dots */}
+          {data.map((d, i) => (
+            <circle key={`a-${i}`} cx={toX(i)} cy={toY(d.absent)} r="4" fill="#f87171" stroke="white" strokeWidth="2" />
+          ))}
+        </svg>
+      )}
     </div>
   );
 }
 
 function ClassAttendanceBarChart({ data }: { data: ClassAttendance[] }) {
-  const maxVal = Math.max(...data.map((d) => d.present + d.absent));
+  const maxVal = Math.max(...data.map((d) => d.present + d.absent), 1);
   const chartHeight = 200;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-slate-700">Class-wise Attendance</h3>
+        <h3 className="text-sm font-bold text-slate-700">Class-wise Attendance (This Month)</h3>
         <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Present</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-400" /> Absent</span>
         </div>
       </div>
-      <div className="relative">
-        <div className="absolute left-0 top-0 bottom-6 w-10 flex flex-col justify-between text-[10px] text-slate-400">
-          <span>{maxVal}</span>
-          <span>{Math.round(maxVal * 0.75)}</span>
-          <span>{Math.round(maxVal * 0.5)}</span>
-          <span>{Math.round(maxVal * 0.25)}</span>
-          <span>0</span>
+      {data.length === 0 ? (
+        <div className="flex items-center justify-center h-48 text-slate-400 text-sm">
+          No classes or attendance data yet
         </div>
-        <div className="ml-12">
-          <div className="relative" style={{ height: chartHeight }}>
-            {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
-              <div
-                key={pct}
-                className="absolute w-full border-t border-dashed border-slate-100"
-                style={{ top: `${(1 - pct) * 100}%` }}
-              />
-            ))}
-            <div className="absolute inset-0 flex items-end justify-between gap-2">
-              {data.map((d, i) => {
-                const presentH = (d.present / maxVal) * chartHeight;
-                const absentH = (d.absent / maxVal) * chartHeight;
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center group relative">
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
-                      {d.class_name}: {d.present}P / {d.absent}A
+      ) : (
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-6 w-10 flex flex-col justify-between text-[10px] text-slate-400">
+            <span>{maxVal}</span>
+            <span>{Math.round(maxVal * 0.75)}</span>
+            <span>{Math.round(maxVal * 0.5)}</span>
+            <span>{Math.round(maxVal * 0.25)}</span>
+            <span>0</span>
+          </div>
+          <div className="ml-12">
+            <div className="relative" style={{ height: chartHeight }}>
+              {[0, 0.25, 0.5, 0.75, 1].map((pct) => (
+                <div
+                  key={pct}
+                  className="absolute w-full border-t border-dashed border-slate-100"
+                  style={{ top: `${(1 - pct) * 100}%` }}
+                />
+              ))}
+              <div className="absolute inset-0 flex items-end justify-between gap-2">
+                {data.map((d, i) => {
+                  const presentH = maxVal > 0 ? (d.present / maxVal) * chartHeight : 0;
+                  const absentH = maxVal > 0 ? (d.absent / maxVal) * chartHeight : 0;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center group relative">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
+                        {d.class_name}: {d.present}P / {d.absent}A
+                      </div>
+                      <div className="w-full flex gap-px items-end" style={{ height: chartHeight }}>
+                        <div
+                          className="flex-1 bg-emerald-500 rounded-t-sm hover:bg-emerald-600 transition cursor-pointer"
+                          style={{ height: presentH }}
+                        />
+                        <div
+                          className="flex-1 bg-red-400 rounded-t-sm hover:bg-red-500 transition cursor-pointer"
+                          style={{ height: absentH }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-1 text-center leading-tight truncate w-full">{d.class_name}</span>
                     </div>
-                    <div className="w-full flex gap-px items-end" style={{ height: chartHeight }}>
-                      <div
-                        className="flex-1 bg-emerald-500 rounded-t-sm hover:bg-emerald-600 transition cursor-pointer"
-                        style={{ height: presentH }}
-                      />
-                      <div
-                        className="flex-1 bg-red-400 rounded-t-sm hover:bg-red-500 transition cursor-pointer"
-                        style={{ height: absentH }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-slate-400 mt-1 text-center leading-tight">{d.class_name}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -232,6 +223,16 @@ export function AdminDashboard() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => (await api.get("/dashboard/admin/stats")).data as AdminStats,
+  });
+
+  const { data: monthlyData = [] } = useQuery({
+    queryKey: ["monthly-attendance"],
+    queryFn: async () => (await api.get("/dashboard/monthly-attendance")).data as MonthlyData[],
+  });
+
+  const { data: classData = [] } = useQuery({
+    queryKey: ["class-attendance"],
+    queryFn: async () => (await api.get("/dashboard/class-attendance")).data as ClassAttendance[],
   });
 
   if (isLoading) {
@@ -412,8 +413,8 @@ export function AdminDashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <MonthlyAttendanceLineChart data={MONTHS_DATA} />
-        <ClassAttendanceBarChart data={CLASS_DATA} />
+        <MonthlyAttendanceLineChart data={monthlyData} />
+        <ClassAttendanceBarChart data={classData} />
       </div>
     </div>
   );

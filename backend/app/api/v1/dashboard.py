@@ -1,7 +1,8 @@
 """Role-aware dashboards + reports (counts only, no extra modules)."""
 from datetime import date, timedelta
+from calendar import month_name
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, and_, or_
+from sqlalchemy import func, and_, extract
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_admin
@@ -132,3 +133,75 @@ def admin_stats(db: Session = Depends(get_db)):
             ],
         },
     }
+
+
+@router.get("/monthly-attendance", dependencies=[Depends(require_admin)])
+def monthly_attendance(db: Session = Depends(get_db)):
+    """Monthly attendance totals for the current year (or last 12 months)."""
+    today = date.today()
+    year = today.year
+
+    months = []
+    for m in range(1, 13):
+        start = date(year, m, 1)
+        if m == 12:
+            end = date(year, 12, 31)
+        else:
+            end = date(year, m + 1, 1) - timedelta(days=1)
+
+        total = db.query(func.count(Attendance.id)).filter(
+            and_(Attendance.date >= start, Attendance.date <= end)
+        ).scalar() or 0
+
+        present = db.query(func.count(Attendance.id)).filter(
+            and_(Attendance.date >= start, Attendance.date <= end, Attendance.status == AttendanceStatus.PRESENT)
+        ).scalar() or 0
+
+        absent = total - present
+
+        months.append({
+            "month": month_name[m][:3],
+            "month_full": month_name[m],
+            "present": present,
+            "absent": absent,
+            "total": total,
+        })
+
+    return months
+
+
+@router.get("/class-attendance", dependencies=[Depends(require_admin)])
+def class_attendance(db: Session = Depends(get_db)):
+    """Current month class-wise attendance breakdown."""
+    today = date.today()
+    start = date(today.year, today.month, 1)
+    end = today
+
+    classes = db.query(SchoolClass).order_by(SchoolClass.name).all()
+    result = []
+
+    for cls in classes:
+        total = db.query(func.count(Attendance.id)).filter(
+            and_(Attendance.class_id == cls.id, Attendance.date >= start, Attendance.date <= end)
+        ).scalar() or 0
+
+        present = db.query(func.count(Attendance.id)).filter(
+            and_(
+                Attendance.class_id == cls.id,
+                Attendance.date >= start,
+                Attendance.date <= end,
+                Attendance.status == AttendanceStatus.PRESENT,
+            )
+        ).scalar() or 0
+
+        absent = total - present
+
+        result.append({
+            "class_name": cls.name,
+            "class_code": cls.code,
+            "present": present,
+            "absent": absent,
+            "total": total,
+        })
+
+    return result
