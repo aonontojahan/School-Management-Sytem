@@ -35,6 +35,11 @@ interface Exam {
   total_marks: number;
 }
 
+interface ExamRoutine {
+  id: number; exam_name: string; subject_name: string;
+  exam_date: string; start_time: string; end_time: string; room: string | null;
+}
+
 interface Notification {
   id: number;
   title: string;
@@ -109,6 +114,11 @@ export function StudentDashboard() {
   const { data: notifications } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => (await api.get("/notifications")).data as Notification[],
+  });
+
+  const { data: examRoutines } = useQuery({
+    queryKey: ["student-exam-routines"],
+    queryFn: async () => (await api.get("/exams/routines")).data as ExamRoutine[],
   });
 
   if (isLoading) {
@@ -280,6 +290,36 @@ export function StudentDashboard() {
                     <p className="text-xs font-medium text-indigo-600">{exam.start_date || "TBA"}</p>
                     <p className="text-xs text-slate-400">{exam.total_marks} marks</p>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Exam Routine */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-700">Exam Routine</h3>
+            {examRoutines && examRoutines.length > 0 && (
+              <a href="/exam-routine" className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-700">View All</a>
+            )}
+          </div>
+          {!examRoutines || examRoutines.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-8">No exam routine yet</p>
+          ) : (
+            <div className="space-y-2">
+              {examRoutines.slice(0, 4).map(r => (
+                <div key={r.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
+                  <div className="w-12 text-center shrink-0">
+                    <p className="text-[10px] font-bold text-indigo-700">{r.start_time}</p>
+                    <p className="text-[10px] text-slate-400">to</p>
+                    <p className="text-[10px] font-bold text-indigo-700">{r.end_time}</p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 truncate">{r.subject_name}</p>
+                    <p className="text-[10px] text-slate-500">{r.exam_name}</p>
+                  </div>
+                  {r.room && <span className="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full shrink-0">{r.room}</span>}
                 </div>
               ))}
             </div>

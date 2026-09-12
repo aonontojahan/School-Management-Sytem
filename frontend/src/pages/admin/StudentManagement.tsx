@@ -16,7 +16,6 @@ interface Student {
   section_id: number | null;
   roll_number: number | null;
   group: string | null;
-  division: string | null;
   guardian_name: string | null;
   guardian_phone: string | null;
   status: string;
@@ -57,7 +56,6 @@ interface StudentFormData {
   section_id: number | null;
   group: string;
   roll_number: number | null;
-  division: string;
   guardian_name: string;
   guardian_phone: string;
 }
@@ -77,12 +75,10 @@ const emptyForm: StudentFormData = {
   section_id: null,
   group: "",
   roll_number: null,
-  division: "",
   guardian_name: "",
   guardian_phone: "",
 };
 
-const DIVISIONS = ["N/A", "Science", "Arts", "Commerce"];
 const GENDERS = ["MALE", "FEMALE", "OTHER"];
 const GROUPS = ["SCIENCE", "HUMANITIES", "BUSINESS_STUDIES"];
 
@@ -242,7 +238,6 @@ function StudentForm({
         />
       )}
       <InputField label="Roll Number" type="number" value={data.roll_number} onChange={(v) => onChange({ ...data, roll_number: v ? Number(v) : null })} />
-      <SelectField label="Division" options={DIVISIONS.map((d) => ({ value: d, label: d }))} value={data.division} onChange={(v) => onChange({ ...data, division: v })} />
       <InputField label="Guardian Name" value={data.guardian_name} onChange={(v) => onChange({ ...data, guardian_name: v })} />
       <InputField label="Guardian Phone" value={data.guardian_phone} onChange={(v) => onChange({ ...data, guardian_phone: v })} />
     </div>
@@ -255,7 +250,6 @@ export function StudentManagement() {
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<number | "">("");
   const [filterStatus, setFilterStatus] = useState<string>("");
-  const [filterDivision, setFilterDivision] = useState<string>("");
   const [page, setPage] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -289,12 +283,11 @@ export function StudentManagement() {
   if (search) params.set("q", search);
   if (filterClass) params.set("class_id", String(filterClass));
   if (filterStatus) params.set("status", filterStatus);
-  if (filterDivision) params.set("division", filterDivision);
   params.set("skip", String(page * 50));
   params.set("limit", "50");
 
   const { data: students, isLoading, isError } = useQuery({
-    queryKey: ["admin-students", search, filterClass, filterStatus, filterDivision, page],
+    queryKey: ["admin-students", search, filterClass, filterStatus, page],
     queryFn: async () => (await api.get(`/admin/students?${params.toString()}`)).data as Student[],
   });
 
@@ -321,7 +314,6 @@ export function StudentManagement() {
         section_id: data.section_id || undefined,
         group: data.group || undefined,
         roll_number: data.roll_number || undefined,
-        division: data.division || undefined,
         guardian_name: data.guardian_name || undefined,
         guardian_phone: data.guardian_phone || undefined,
       };
@@ -354,7 +346,6 @@ export function StudentManagement() {
         section_id: data.section_id || undefined,
         group: data.group || undefined,
         roll_number: data.roll_number || undefined,
-        division: data.division || undefined,
         guardian_name: data.guardian_name || undefined,
         guardian_phone: data.guardian_phone || undefined,
       };
@@ -432,7 +423,6 @@ export function StudentManagement() {
       section_id: s.section_id,
       group: s.group || "",
       roll_number: s.roll_number,
-      division: s.division || "",
       guardian_name: s.guardian_name || "",
       guardian_phone: s.guardian_phone || "",
     });
@@ -515,17 +505,6 @@ export function StudentManagement() {
             <option value="INACTIVE">Inactive</option>
           </select>
 
-          <select
-            value={filterDivision}
-            onChange={(e) => { setFilterDivision(e.target.value); setPage(0); }}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition"
-          >
-            <option value="">All Divisions</option>
-            {DIVISIONS.map((d) => (
-              <option key={d} value={d}>{d === "N/A" ? "Not Applicable" : d}</option>
-            ))}
-          </select>
-
           <button
             onClick={() => {
               if (!students || students.length === 0) return;
@@ -535,7 +514,6 @@ export function StudentManagement() {
               const filterParts: string[] = [];
               if (filterClass) filterParts.push(`Class: ${classes?.find(c => c.id === filterClass)?.name || filterClass}`);
               if (filterStatus) filterParts.push(`Status: ${filterStatus}`);
-              if (filterDivision) filterParts.push(`Division: ${filterDivision}`);
               if (search) filterParts.push(`Search: "${search}"`);
               if (filterParts.length > 0) lines.push(`Filters: ${filterParts.join(" | ")}`);
               lines.push(`Total: ${students.length} student(s)`);
@@ -690,7 +668,6 @@ export function StudentManagement() {
                   <div className="flex justify-between"><span className="text-slate-500">Section</span><span className="text-slate-900">{detail.section?.name || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Group</span><span className="text-slate-900">{detail.group?.replace("_", " ") || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Roll Number</span><span className="text-slate-900">{detail.roll_number ?? "—"}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Division</span><span className="text-slate-900">{detail.division || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Admission Date</span><span className="text-slate-900">{detail.admission_date || "—"}</span></div>
                 </div>
               </div>

@@ -43,6 +43,11 @@ export function TeacherDashboard() {
     queryFn: async () => (await api.get("/routines/teacher")).data as RoutineEntry[],
   });
 
+  const { data: examRoutines } = useQuery({
+    queryKey: ["teacher-exam-routines"],
+    queryFn: async () => (await api.get("/exams/routines")).data as { id: number; exam_name: string; subject_name: string; class_name: string; exam_date: string; start_time: string; end_time: string; room: string | null }[],
+  });
+
   const isLoading = routineLoading;
 
   if (isLoading) {
@@ -131,8 +136,34 @@ export function TeacherDashboard() {
                         {entry.class_name} — Section {entry.section_name}
                         {entry.group && ` (${entry.group})`}
                       </p>
-                    </div>
-                  </div>
+      </div>
+
+      {/* Exam Duty */}
+      {examRoutines && examRoutines.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-700">Exam Duty</h3>
+            <a href="/exam-routine" className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-700">View All</a>
+          </div>
+          <div className="space-y-2">
+            {examRoutines.slice(0, 4).map(r => (
+              <div key={r.id} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg">
+                <div className="w-12 text-center shrink-0">
+                  <p className="text-[10px] font-bold text-indigo-700">{r.start_time}</p>
+                  <p className="text-[10px] text-slate-400">to</p>
+                  <p className="text-[10px] font-bold text-indigo-700">{r.end_time}</p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-slate-900 truncate">{r.subject_name}</p>
+                  <p className="text-[10px] text-slate-500">{r.class_name} • {r.exam_name}</p>
+                </div>
+                {r.room && <span className="text-[9px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full shrink-0">{r.room}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
                   <p className="text-xs font-medium text-slate-500">
                     {formatTime(entry.start_time)} – {formatTime(entry.end_time)}
                   </p>
