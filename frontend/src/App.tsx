@@ -8,6 +8,7 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { StudentDashboard } from "./pages/StudentDashboard";
 import { StudentManagement } from "./pages/admin/StudentManagement";
 import { TeacherManagement } from "./pages/admin/TeacherManagement";
+import { AdminRoutinePage } from "./pages/admin/AdminRoutinePage";
 import { SearchPage } from "./pages/SearchPage";
 import {
   Classes,
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="/student/dashboard" element={<Shelled roles={["STUDENT"]}><StudentDashboard /></Shelled>} />
         <Route path="/students" element={<Shelled roles={["ADMIN"]}><StudentManagement /></Shelled>} />
         <Route path="/teachers" element={<Shelled roles={["ADMIN"]}><TeacherManagement /></Shelled>} />
+        <Route path="/routines" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><AdminRoutinePage /></Shelled>} />
         <Route path="/classes" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><Classes /></Shelled>} />
         <Route path="/subjects" element={<Shelled roles={["ADMIN"]}><Subjects /></Shelled>} />
         <Route path="/attendance" element={<Shelled><AttendancePage /></Shelled>} />

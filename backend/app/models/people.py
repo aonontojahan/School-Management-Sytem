@@ -5,7 +5,7 @@ from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, UniqueConstr
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import Gender, PersonStatus
+from app.models.enums import Gender, PersonStatus, StudentGroup
 
 
 class StudentProfile(Base):
@@ -14,7 +14,7 @@ class StudentProfile(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), unique=True)
-    student_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)  # e.g. STU-2026-0001
+    student_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100))
     date_of_birth: Mapped[date | None] = mapped_column(Date)
@@ -23,10 +23,12 @@ class StudentProfile(Base):
     phone: Mapped[str | None] = mapped_column(String(32))
     address: Mapped[str | None] = mapped_column(String(500))
     admission_date: Mapped[date | None] = mapped_column(Date)
+    academic_year_id: Mapped[int | None] = mapped_column(ForeignKey("academic_years.id", ondelete="SET NULL"), index=True)
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id", ondelete="SET NULL"), index=True)
     section_id: Mapped[int | None] = mapped_column(ForeignKey("sections.id", ondelete="SET NULL"), index=True)
+    group: Mapped[StudentGroup | None] = mapped_column(default=None)
     roll_number: Mapped[int | None] = mapped_column(Integer)
-    division: Mapped[str | None] = mapped_column(String(32))  # e.g. Class 9: Science/Commerce/Arts
+    division: Mapped[str | None] = mapped_column(String(32))
     guardian_name: Mapped[str | None] = mapped_column(String(200))
     guardian_phone: Mapped[str | None] = mapped_column(String(32))
     status: Mapped[PersonStatus] = mapped_column(default=PersonStatus.ACTIVE)
@@ -37,6 +39,7 @@ class StudentProfile(Base):
     )
 
     user: Mapped["User | None"] = relationship(back_populates="student_profile")
+    academic_year: Mapped["AcademicYear | None"] = relationship()
     school_class: Mapped["SchoolClass | None"] = relationship(back_populates="students")
     section: Mapped["Section | None"] = relationship(back_populates="students")
     attendances: Mapped[list["Attendance"]] = relationship(
@@ -56,7 +59,7 @@ class TeacherProfile(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), unique=True)
-    teacher_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)  # e.g. TCH-0001
+    teacher_code: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     first_name: Mapped[str] = mapped_column(String(100))
     last_name: Mapped[str] = mapped_column(String(100))
     email: Mapped[str | None] = mapped_column(String(255), unique=True)

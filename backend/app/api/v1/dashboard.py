@@ -175,7 +175,7 @@ def class_attendance(db: Session = Depends(get_db)):
     """Today's class-wise attendance breakdown for all classes (5-9)."""
     today = date.today()
 
-    classes = db.query(SchoolClass).order_by(SchoolClass.name).all()
+    classes = db.query(SchoolClass).order_by(SchoolClass.sort_order).all()
     result = []
 
     for cls in classes:
@@ -206,8 +206,9 @@ def class_attendance(db: Session = Depends(get_db)):
 
 @router.get("/student", dependencies=[Depends(get_current_user)])
 def student_dashboard(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """Student dashboard: profile, attendance, upcoming exams, recent assignments."""
+    """Student dashboard: profile, attendance, upcoming exams, recent assignments, routine."""
     from app.models.assignment import AssignmentSubmission
+    from app.models.routine import Period, Routine
 
     student = db.query(StudentProfile).filter(StudentProfile.user_id == user.id).first()
     if not student:
@@ -259,7 +260,52 @@ def student_dashboard(db: Session = Depends(get_db), user: User = Depends(get_cu
     # Subjects for student's class
     subjects = []
     if cls:
-        subjects = [{"id": s.id, "name": s.name, "code": s.code} for s in cls.subjects]
+        class_num = cls.name.replace("Class ", "").strip()
+        if class_num in ("9", "10") and student.group:
+            from sqlalchemy import text
+            result = db.execute(
+                text("SELECT s.id, s.name, s.code FROM class_group_subjects cgs "
+                     "JOIN subjects s ON s.id = cgs.subject_id "
+                     "WHERE cgs.class_id = :cid AND cgs.group_name = :gn "
+                     "ORDER BY s.name"),
+                {"cid": student.class_id, "gn": student.group.value},
+            )
+            subjects = [{"id": r[0], "name": r[1], "code": r[2]} for r in result]
+        else:
+            subjects = [{"id": s.id, "name": s.name, "code": s.code} for s in cls.subjects]
+
+    # Student routine
+    routine = []
+    if student.class_id and student.section_id:
+        routine_query = db.query(Routine).filter(
+            Routine.class_id == student.class_id,
+            Routine.section_id == student.section_id,
+        )
+        if student.group:
+            routine_query = routine_query.filter(
+                (Routine.group == student.group.value) | (Routine.group.is_(None))
+            )
+        else:
+            routine_query = routine_query.filter(Routine.group.is_(None))
+
+        routines = routine_query.order_by(Routine.day, Routine.period_id).all()
+
+        from app.models.academic import Subject as SubjModel
+        from app.models.people import TeacherProfile as TchModel
+
+        for r in routines:
+            subj = db.get(SubjModel, r.subject_id)
+            tch = db.get(TchModel, r.teacher_id)
+            period = db.get(Period, r.period_id)
+
+            routine.append({
+                "day": r.day.value,
+                "period_label": period.label if period else None,
+                "start_time": period.start_time.isoformat() if period else None,
+                "end_time": period.end_time.isoformat() if period else None,
+                "subject_name": subj.name if subj else None,
+                "teacher_name": f"{tch.first_name} {tch.last_name}" if tch else None,
+            })
 
     return {
         "profile": {
@@ -274,6 +320,7 @@ def student_dashboard(db: Session = Depends(get_db), user: User = Depends(get_cu
             "address": student.address,
             "admission_date": str(student.admission_date) if student.admission_date else None,
             "roll_number": student.roll_number,
+            "group": student.group.value if student.group else None,
             "division": student.division,
             "guardian_name": student.guardian_name,
             "guardian_phone": student.guardian_phone,
@@ -324,4 +371,5 @@ def student_dashboard(db: Session = Depends(get_db), user: User = Depends(get_cu
             }
             for a in recent_assignments
         ],
+        "routine": routine,
     }

@@ -55,3 +55,19 @@ class PaymentMethod(str, enum.Enum):
     NAGAD = "NAGAD"
     BANK = "BANK"
     OTHER = "OTHER"
+
+
+class DayOfWeek(str, enum.Enum):
+    SUNDAY = "SUNDAY"
+    MONDAY = "MONDAY"
+    TUESDAY = "TUESDAY"
+    WEDNESDAY = "WEDNESDAY"
+    THURSDAY = "THURSDAY"
+    FRIDAY = "FRIDAY"
+    SATURDAY = "SATURDAY"
+
+
+class StudentGroup(str, enum.Enum):
+    SCIENCE = "SCIENCE"
+    HUMANITIES = "HUMANITIES"
+    BUSINESS_STUDIES = "BUSINESS_STUDIES"

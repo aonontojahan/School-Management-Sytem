@@ -1,13 +1,14 @@
 """Admin-only management endpoints for students and teachers with account creation."""
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_admin
 from app.core.security import hash_password
 from app.db.session import get_db
 from app.models.academic import SchoolClass, Section, Subject
-from app.models.enums import PersonStatus, UserRole
+from app.models.enums import PersonStatus, StudentGroup, UserRole
 from app.models.people import StudentProfile, TeacherProfile
 from app.models.user import User
 from app.schemas.students import StudentCreate, StudentOut, StudentUpdate
@@ -63,8 +64,10 @@ def admin_create_student(data: StudentCreate, db: Session = Depends(get_db)):
         phone=data.phone,
         address=data.address,
         admission_date=data.admission_date,
+        academic_year_id=data.academic_year_id,
         class_id=data.class_id,
         section_id=data.section_id,
+        group=data.group,
         roll_number=data.roll_number,
         division=data.division,
         guardian_name=data.guardian_name,
@@ -471,7 +474,7 @@ def admin_get_teacher_detail(teacher_id: int, db: Session = Depends(get_db), use
 @router.get("/classes", response_model=list[dict])
 def admin_list_classes_for_dropdown(db: Session = Depends(get_db), user: User = Depends(require_admin)):
     """Get classes for dropdown selection."""
-    classes = db.query(SchoolClass).order_by(SchoolClass.name).all()
+    classes = db.query(SchoolClass).order_by(SchoolClass.sort_order).all()
     return [{"id": c.id, "name": c.name, "code": c.code} for c in classes]
 
 
@@ -492,3 +495,71 @@ def admin_list_subjects_for_dropdown(db: Session = Depends(get_db), user: User =
     """Get subjects for dropdown selection."""
     subjects = db.query(Subject).order_by(Subject.name).all()
     return [{"id": s.id, "name": s.name, "code": s.code} for s in subjects]
+
+
+@router.get("/class-subjects")
+def admin_get_class_subjects(
+    class_id: int = Query(...),
+    group: str | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Get subjects for a class, optionally filtered by group (for Class 9-10)."""
+    cls = db.get(SchoolClass, class_id)
+    if not cls:
+        raise HTTPException(404, "Class not found")
+
+    # Extract class number from name like "Class 9" -> "9"
+    class_num = cls.name.replace("Class ", "").strip()
+
+    if class_num in ("9", "10") and group:
+        # Get group-specific subjects
+        result = db.execute(
+            text("SELECT s.id, s.name, s.code FROM class_group_subjects cgs "
+                 "JOIN subjects s ON s.id = cgs.subject_id "
+                 "WHERE cgs.class_id = :cid AND cgs.group_name = :gn "
+                 "ORDER BY s.name"),
+            {"cid": class_id, "gn": group},
+        )
+        return [{"id": r[0], "name": r[1], "code": r[2]} for r in result]
+    else:
+        # Get class subjects (for classes without groups)
+        return [{"id": s.id, "name": s.name, "code": s.code} for s in cls.subjects]
+
+
+@router.get("/student-subjects")
+def admin_get_student_subjects(
+    student_id: int = Query(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Get subjects for a student based on their class and group."""
+    student = db.get(StudentProfile, student_id)
+    if not student:
+        raise HTTPException(404, "Student not found")
+    if not student.class_id:
+        raise HTTPException(400, "Student has no class assigned")
+
+    cls = db.get(SchoolClass, student.class_id)
+    if not cls:
+        raise HTTPException(404, "Class not found")
+
+    class_num = cls.name.replace("Class ", "").strip()
+
+    if class_num in ("9", "10") and student.group:
+        result = db.execute(
+            text("SELECT s.id, s.name, s.code FROM class_group_subjects cgs "
+                 "JOIN subjects s ON s.id = cgs.subject_id "
+                 "WHERE cgs.class_id = :cid AND cgs.group_name = :gn "
+                 "ORDER BY s.name"),
+            {"cid": student.class_id, "gn": student.group.value},
+        )
+        return [{"id": r[0], "name": r[1], "code": r[2]} for r in result]
+    else:
+        return [{"id": s.id, "name": s.name, "code": s.code} for s in cls.subjects]
+
+
+@router.get("/groups")
+def admin_list_groups(user: User = Depends(require_admin)):
+    """Get available student groups."""
+    return [{"value": g.value, "label": g.value.replace("_", " ").title()} for g in StudentGroup]

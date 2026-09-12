@@ -15,6 +15,7 @@ interface Student {
   class_id: number | null;
   section_id: number | null;
   roll_number: number | null;
+  group: string | null;
   division: string | null;
   guardian_name: string | null;
   guardian_phone: string | null;
@@ -23,6 +24,7 @@ interface Student {
   gender: string | null;
   address: string | null;
   admission_date: string | null;
+  academic_year_id: number | null;
 }
 
 interface StudentDetail extends Student {
@@ -50,8 +52,10 @@ interface StudentFormData {
   gender: string;
   address: string;
   admission_date: string;
+  academic_year_id: number | null;
   class_id: number | null;
   section_id: number | null;
+  group: string;
   roll_number: number | null;
   division: string;
   guardian_name: string;
@@ -68,8 +72,10 @@ const emptyForm: StudentFormData = {
   gender: "",
   address: "",
   admission_date: "",
+  academic_year_id: null,
   class_id: null,
   section_id: null,
+  group: "",
   roll_number: null,
   division: "",
   guardian_name: "",
@@ -78,6 +84,7 @@ const emptyForm: StudentFormData = {
 
 const DIVISIONS = ["N/A", "Science", "Arts", "Commerce"];
 const GENDERS = ["MALE", "FEMALE", "OTHER"];
+const GROUPS = ["SCIENCE", "HUMANITIES", "BUSINESS_STUDIES"];
 
 function InputField({
   label,
@@ -148,13 +155,19 @@ function StudentForm({
   isCreate,
   classes,
   sections,
+  academicYears,
 }: {
   data: StudentFormData;
   onChange: (d: StudentFormData) => void;
   isCreate: boolean;
   classes?: DropdownItem[];
   sections?: DropdownItem[];
+  academicYears?: DropdownItem[];
 }) {
+  const selectedClass = classes?.find(c => c.id === data.class_id);
+  const classNum = selectedClass?.name?.replace("Class ", "").trim() || "";
+  const showGroup = classNum === "9" || classNum === "10";
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <InputField label="First Name" required value={data.first_name} onChange={(v) => onChange({ ...data, first_name: v })} />
@@ -178,20 +191,31 @@ function StudentForm({
         />
       </div>
       <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Academic Year</label>
+        <select
+          value={data.academic_year_id ?? ""}
+          onChange={(e) => onChange({ ...data, academic_year_id: e.target.value ? Number(e.target.value) : null })}
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+        >
+          <option value="">Select year…</option>
+          {academicYears?.map((y) => (
+            <option key={y.id} value={y.id}>{y.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
         <select
           value={data.class_id ?? ""}
           onChange={(e) => {
             const cid = e.target.value ? Number(e.target.value) : null;
-            onChange({ ...data, class_id: cid, section_id: null });
+            onChange({ ...data, class_id: cid, section_id: null, group: "" });
           }}
           className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
         >
           <option value="">Select class…</option>
           {classes?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
+            <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
       </div>
@@ -204,12 +228,19 @@ function StudentForm({
         >
           <option value="">Select section…</option>
           {sections?.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
+            <option key={s.id} value={s.id}>{s.name}</option>
           ))}
         </select>
       </div>
+      {showGroup && (
+        <SelectField
+          label="Group"
+          options={GROUPS.map((g) => ({ value: g, label: g.replace("_", " ") }))}
+          placeholder="Select group…"
+          value={data.group}
+          onChange={(v) => onChange({ ...data, group: v })}
+        />
+      )}
       <InputField label="Roll Number" type="number" value={data.roll_number} onChange={(v) => onChange({ ...data, roll_number: v ? Number(v) : null })} />
       <SelectField label="Division" options={DIVISIONS.map((d) => ({ value: d, label: d }))} value={data.division} onChange={(v) => onChange({ ...data, division: v })} />
       <InputField label="Guardian Name" value={data.guardian_name} onChange={(v) => onChange({ ...data, guardian_name: v })} />
@@ -243,6 +274,11 @@ export function StudentManagement() {
   const { data: allSections } = useQuery({
     queryKey: ["admin-sections"],
     queryFn: async () => (await api.get("/admin/sections")).data as DropdownItem[],
+  });
+
+  const { data: academicYears } = useQuery({
+    queryKey: ["admin-academic-years"],
+    queryFn: async () => (await api.get("/academic/years")).data as DropdownItem[],
   });
 
   const sections = form.class_id
@@ -280,8 +316,10 @@ export function StudentManagement() {
         gender: data.gender || undefined,
         address: data.address || undefined,
         admission_date: data.admission_date || undefined,
+        academic_year_id: data.academic_year_id || undefined,
         class_id: data.class_id || undefined,
         section_id: data.section_id || undefined,
+        group: data.group || undefined,
         roll_number: data.roll_number || undefined,
         division: data.division || undefined,
         guardian_name: data.guardian_name || undefined,
@@ -311,8 +349,10 @@ export function StudentManagement() {
         gender: data.gender || undefined,
         address: data.address || undefined,
         admission_date: data.admission_date || undefined,
+        academic_year_id: data.academic_year_id || undefined,
         class_id: data.class_id || undefined,
         section_id: data.section_id || undefined,
+        group: data.group || undefined,
         roll_number: data.roll_number || undefined,
         division: data.division || undefined,
         guardian_name: data.guardian_name || undefined,
@@ -387,8 +427,10 @@ export function StudentManagement() {
       gender: s.gender || "",
       address: s.address || "",
       admission_date: s.admission_date || "",
+      academic_year_id: s.academic_year_id,
       class_id: s.class_id,
       section_id: s.section_id,
+      group: s.group || "",
       roll_number: s.roll_number,
       division: s.division || "",
       guardian_name: s.guardian_name || "",
@@ -519,6 +561,7 @@ export function StudentManagement() {
                 <th className="px-4 py-3 font-semibold text-slate-600">Email</th>
                 <th className="px-4 py-3 font-semibold text-slate-600">Class</th>
                 <th className="px-4 py-3 font-semibold text-slate-600">Section</th>
+                <th className="px-4 py-3 font-semibold text-slate-600">Group</th>
                 <th className="px-4 py-3 font-semibold text-slate-600">Roll</th>
                 <th className="px-4 py-3 font-semibold text-slate-600">Status</th>
                 <th className="px-4 py-3 font-semibold text-slate-600 text-right">Actions</th>
@@ -539,6 +582,7 @@ export function StudentManagement() {
                     <td className="px-4 py-2.5 text-slate-600">{s.email || "—"}</td>
                     <td className="px-4 py-2.5 text-slate-600">{cls?.name || "—"}</td>
                     <td className="px-4 py-2.5 text-slate-600">{sec?.name || "—"}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{s.group?.replace("_", " ") || "—"}</td>
                     <td className="px-4 py-2.5 text-slate-600">{s.roll_number ?? "—"}</td>
                     <td className="px-4 py-2.5">{statusBadge(s.status)}</td>
                     <td className="px-4 py-2.5">
@@ -566,7 +610,7 @@ export function StudentManagement() {
       )}
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Create New Student" wide>
-        <StudentForm data={form} onChange={setForm} isCreate classes={classes} sections={sections} />
+        <StudentForm data={form} onChange={setForm} isCreate classes={classes} sections={sections} academicYears={academicYears} />
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
           <button onClick={() => setCreateOpen(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
           <button onClick={() => createMut.mutate(form)} disabled={createMut.isPending || !form.first_name || !form.last_name} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-60">
@@ -576,7 +620,7 @@ export function StudentManagement() {
       </Modal>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Student" wide>
-        <StudentForm data={form} onChange={setForm} isCreate={false} classes={classes} sections={sections} />
+        <StudentForm data={form} onChange={setForm} isCreate={false} classes={classes} sections={sections} academicYears={academicYears} />
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
           <button onClick={() => setEditOpen(false)} className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 transition">Cancel</button>
           <button onClick={() => editMut.mutate(form)} disabled={editMut.isPending || !form.first_name || !form.last_name} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-60">
@@ -614,6 +658,7 @@ export function StudentManagement() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-slate-500">Class</span><span className="text-slate-900">{detail.class?.name || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Section</span><span className="text-slate-900">{detail.section?.name || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Group</span><span className="text-slate-900">{detail.group?.replace("_", " ") || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Roll Number</span><span className="text-slate-900">{detail.roll_number ?? "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Division</span><span className="text-slate-900">{detail.division || "—"}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Admission Date</span><span className="text-slate-900">{detail.admission_date || "—"}</span></div>

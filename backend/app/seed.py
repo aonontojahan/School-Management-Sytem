@@ -6,7 +6,7 @@ Usage (PowerShell, from backend/):
 Admin credentials come from env: ADMIN_EMAIL / ADMIN_PASSWORD (defaults shown, change immediately).
 """
 import os
-from datetime import date
+from datetime import date, time
 
 from sqlalchemy.orm import Session
 
@@ -16,14 +16,19 @@ from app.db.session import SessionLocal, engine
 from app.models.academic import AcademicYear, SchoolClass, Section, Subject
 from app.models.enums import FeeTypeName, UserRole
 from app.models.fee import FeeType
+from app.models.routine import Period
 from app.models.user import User
 
 DEFAULT_SUBJECTS = [
+    ("Bangla", "BAN"),
     ("Bangla 1st Paper", "BAN1"),
     ("Bangla 2nd Paper", "BAN2"),
+    ("English", "ENG"),
     ("English 1st Paper", "ENG1"),
     ("English 2nd Paper", "ENG2"),
     ("Mathematics", "MATH"),
+    ("General Knowledge", "GK"),
+    ("Drawing", "DRAW"),
     ("Science", "SCI"),
     ("Physics", "PHY"),
     ("Chemistry", "CHEM"),
@@ -38,11 +43,35 @@ DEFAULT_SUBJECTS = [
     ("Finance & Banking", "FIN"),
     ("Business Entrepreneurship", "BEnt"),
     ("Information & Communication Technology", "ICT"),
-    ("Religion & Moral Education", "REL"),
-    ("Physical Education, Health Science & Sports", "PE"),
+    ("Religion", "REL"),
+    ("Religion & Moral Education", "RELM"),
+    ("Physical Education", "PE"),
+    ("Physical Education, Health Science & Sports", "PEHS"),
     ("Career Education", "Career"),
     ("Arts & Crafts", "Art"),
 ]
+
+# Subject-to-class mapping: class_name -> list of subject codes
+# For classes without groups (Nursery-8)
+CLASS_SUBJECTS = {
+    "Nursery": ["BAN", "ENG", "MATH", "GK", "DRAW", "REL"],
+    "Play": ["BAN", "ENG", "MATH", "GK", "DRAW", "REL"],
+    "1": ["BAN", "ENG", "MATH", "SCI", "BGS", "REL", "ICT", "PE", "DRAW"],
+    "2": ["BAN", "ENG", "MATH", "SCI", "BGS", "REL", "ICT", "PE", "DRAW"],
+    "3": ["BAN", "ENG", "MATH", "SCI", "BGS", "REL", "ICT", "PE", "DRAW"],
+    "4": ["BAN", "ENG", "MATH", "SCI", "BGS", "REL", "ICT", "PE", "DRAW"],
+    "5": ["BAN", "ENG", "MATH", "SCI", "BGS", "REL", "ICT", "PE", "DRAW"],
+    "6": ["BAN1", "BAN2", "ENG1", "ENG2", "MATH", "SCI", "BGS", "ICT", "RELM", "PEHS", "Career", "Art"],
+    "7": ["BAN1", "BAN2", "ENG1", "ENG2", "MATH", "SCI", "BGS", "ICT", "RELM", "PEHS", "Career", "Art"],
+    "8": ["BAN1", "BAN2", "ENG1", "ENG2", "MATH", "SCI", "BGS", "ICT", "RELM", "PEHS", "Career", "Art"],
+}
+
+# For classes 9-10: group -> list of subject codes
+GROUP_SUBJECTS = {
+    "SCIENCE": ["BAN1", "BAN2", "ENG1", "ENG2", "MATH", "PHY", "CHEM", "BIO", "HMATH", "ICT", "RELM", "Career", "PEHS"],
+    "HUMANITIES": ["BAN1", "BAN2", "ENG1", "ENG2", "MATH", "HIST", "GEO", "CIV", "ECON", "ICT", "RELM", "Career", "PEHS"],
+    "BUSINESS_STUDIES": ["BAN1", "BAN2", "ENG1", "ENG2", "MATH", "ACC", "FIN", "BEnt", "ICT", "RELM", "Career", "PEHS"],
+}
 
 DEFAULT_DEPARTMENTS = [
     "Science",
@@ -58,9 +87,20 @@ DEFAULT_DEPARTMENTS = [
     "Arts & Crafts",
 ]
 
-PERIODS_PER_DAY = 6
 CLASS_NAMES = ["Nursery", "Play", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
-MAX_PERIODS_PER_TEACHER = 4
+
+# Default periods: 9:00 AM - 3:00 PM
+DEFAULT_PERIODS = [
+    (1, "Period 1", time(9, 0), time(9, 45)),
+    (2, "Period 2", time(9, 45), time(10, 30)),
+    (3, "Period 3", time(10, 30), time(11, 15)),
+    (4, "Period 4", time(11, 15), time(12, 0)),
+    (5, "Break", time(12, 0), time(12, 30)),
+    (6, "Period 5", time(12, 30), time(13, 15)),
+    (7, "Period 6", time(13, 15), time(14, 0)),
+    (8, "Period 7", time(14, 0), time(14, 45)),
+    (9, "Period 8", time(14, 45), time(15, 0)),
+]
 
 
 def seed(db: Session) -> None:
@@ -69,10 +109,18 @@ def seed(db: Session) -> None:
         if not db.query(FeeType).filter(FeeType.name == name).first():
             db.add(FeeType(name=name, description=f"{name.value.title()} fee"))
 
-    # Subjects
+    # Subjects — upsert by name or code
     for name, code in DEFAULT_SUBJECTS:
-        if not db.query(Subject).filter(Subject.code == code).first():
+        existing = db.query(Subject).filter((Subject.code == code) | (Subject.name == name)).first()
+        if existing:
+            # Update code/name if changed
+            if existing.code != code:
+                existing.code = code
+            if existing.name != name:
+                existing.name = name
+        else:
             db.add(Subject(name=name, code=code))
+    db.flush()
 
     # Academic year (current year)
     year_name = str(date.today().year)
@@ -87,17 +135,61 @@ def seed(db: Session) -> None:
         db.add(year)
         db.flush()
 
-    # Classes
-    for cls_name in CLASS_NAMES:
+    # Default periods
+    for num, label, start, end in DEFAULT_PERIODS:
+        if not db.query(Period).filter(
+            Period.academic_year_id == year.id, Period.period_number == num
+        ).first():
+            db.add(Period(
+                academic_year_id=year.id,
+                period_number=num,
+                label=label,
+                start_time=start,
+                end_time=end,
+            ))
+
+    # Classes + sections + subject assignments
+    for sort_idx, cls_name in enumerate(CLASS_NAMES):
+        display_name = f"Class {cls_name}" if cls_name.isdigit() else cls_name
         code = f"C{cls_name}-{year_name}"
-        if not db.query(SchoolClass).filter(SchoolClass.code == code).first():
-            cls = SchoolClass(academic_year_id=year.id, name=f"Class {cls_name}" if cls_name.isdigit() else cls_name, code=code)
+        cls = db.query(SchoolClass).filter(SchoolClass.code == code).first()
+        if not cls:
+            cls = SchoolClass(academic_year_id=year.id, name=display_name, code=code, sort_order=sort_idx)
             db.add(cls)
             db.flush()
-            # Default sections A, B for each class
-            for sec_name in ["A", "B"]:
-                if not db.query(Section).filter(Section.class_id == cls.id, Section.name == sec_name).first():
-                    db.add(Section(class_id=cls.id, name=sec_name))
+        elif cls.sort_order != sort_idx:
+            cls.sort_order = sort_idx
+
+        # Default sections A, B
+        for sec_name in ["A", "B"]:
+            if not db.query(Section).filter(Section.class_id == cls.id, Section.name == sec_name).first():
+                db.add(Section(class_id=cls.id, name=sec_name))
+
+        # Assign subjects to class
+        subject_codes = CLASS_SUBJECTS.get(cls_name, [])
+        if subject_codes:
+            existing_ids = {s.id for s in cls.subjects}
+            for sc in subject_codes:
+                subj = db.query(Subject).filter(Subject.code == sc).first()
+                if subj and subj.id not in existing_ids:
+                    cls.subjects.append(subj)
+
+        # For classes 9-10, assign group subjects
+        if cls_name in ("9", "10"):
+            for group_name, codes in GROUP_SUBJECTS.items():
+                for sc in codes:
+                    subj = db.query(Subject).filter(Subject.code == sc).first()
+                    if subj:
+                        from sqlalchemy import text
+                        result = db.execute(
+                            text("SELECT 1 FROM class_group_subjects WHERE class_id=:cid AND group_name=:gn AND subject_id=:sid"),
+                            {"cid": cls.id, "gn": group_name, "sid": subj.id},
+                        )
+                        if not result.first():
+                            db.execute(
+                                text("INSERT INTO class_group_subjects (class_id, group_name, subject_id) VALUES (:cid, :gn, :sid)"),
+                                {"cid": cls.id, "gn": group_name, "sid": subj.id},
+                            )
 
     # Admin user
     email = os.getenv("ADMIN_EMAIL", "admin@school.edu")
@@ -112,7 +204,7 @@ def seed(db: Session) -> None:
 
 
 if __name__ == "__main__":
-    Base.metadata.create_all(bind=engine)  # safety for fresh DB; Alembic is canonical
+    Base.metadata.create_all(bind=engine)
     with SessionLocal() as session:
         seed(session)
     print("Seed complete.")

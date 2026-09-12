@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import admin, assignments, attendance, auth, academic, dashboard, exams, fees, students, teachers, users
+from app.api.v1 import admin, assignments, attendance, auth, academic, dashboard, exams, fees, routines, students, teachers, users
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -14,3 +14,4 @@ api_router.include_router(exams.router)
 api_router.include_router(fees.router)
 api_router.include_router(assignments.router)
 api_router.include_router(dashboard.router)
+api_router.include_router(routines.router)

@@ -13,6 +13,7 @@ interface StudentProfile {
   address: string | null;
   admission_date: string | null;
   roll_number: number | null;
+  group: string | null;
   division: string | null;
   guardian_name: string | null;
   guardian_phone: string | null;
@@ -42,6 +43,15 @@ interface Assignment {
   subject_id: number;
 }
 
+interface RoutineEntry {
+  day: string;
+  period_label: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  subject_name: string | null;
+  teacher_name: string | null;
+}
+
 interface StudentDashboardData {
   profile: StudentProfile;
   class: { id: number; name: string; code: string } | null;
@@ -56,7 +66,13 @@ interface StudentDashboardData {
   };
   upcoming_exams: Exam[];
   recent_assignments: Assignment[];
+  routine: RoutineEntry[];
 }
+
+const DAYS_ORDER = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+const DAY_LABELS: Record<string, string> = {
+  SUNDAY: "Sun", MONDAY: "Mon", TUESDAY: "Tue", WEDNESDAY: "Wed", THURSDAY: "Thu", FRIDAY: "Fri", SATURDAY: "Sat",
+};
 
 function InfoCard({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
   return (
@@ -106,7 +122,14 @@ export function StudentDashboard() {
     );
   }
 
-  const { profile, class: cls, section, subjects, attendance, upcoming_exams, recent_assignments } = data;
+  const { profile, class: cls, section, subjects, attendance, upcoming_exams, recent_assignments, routine } = data;
+
+  // Group routine by day
+  const routineByDay: Record<string, RoutineEntry[]> = {};
+  for (const entry of routine) {
+    if (!routineByDay[entry.day]) routineByDay[entry.day] = [];
+    routineByDay[entry.day].push(entry);
+  }
 
   return (
     <div className="space-y-6">
@@ -118,8 +141,7 @@ export function StudentDashboard() {
         </p>
         <div className="flex items-center gap-4 mt-3 text-sm text-indigo-100">
           <span>Code: {profile.student_code}</span>
-          <span>•</span>
-          <span>{profile.division || "No division"}</span>
+          {profile.group && <><span>•</span><span>Group: {profile.group.replace("_", " ")}</span></>}
         </div>
       </div>
 
@@ -161,6 +183,45 @@ export function StudentDashboard() {
             </svg>
           }
         />
+      </div>
+
+      {/* Class Routine */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <h3 className="text-sm font-bold text-slate-700 mb-4">My Class Routine</h3>
+        {routine.length === 0 ? (
+          <p className="text-sm text-slate-400 text-center py-8">No routine scheduled</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Day</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Time</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Subject</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Teacher</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DAYS_ORDER.filter(d => routineByDay[d]).map(day => (
+                  routineByDay[day].map((entry, i) => (
+                    <tr key={`${day}-${i}`} className="border-b border-slate-100 last:border-0">
+                      {i === 0 && (
+                        <td rowSpan={routineByDay[day].length} className="py-2 px-3 font-semibold text-indigo-700 align-top">
+                          {DAY_LABELS[day]}
+                        </td>
+                      )}
+                      <td className="py-2 px-3 text-slate-600">
+                        {entry.start_time?.slice(0, 5)} - {entry.end_time?.slice(0, 5)}
+                      </td>
+                      <td className="py-2 px-3 font-medium text-slate-900">{entry.subject_name}</td>
+                      <td className="py-2 px-3 text-slate-600">{entry.teacher_name}</td>
+                    </tr>
+                  ))
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -36,7 +36,7 @@ def create_year(data: AcademicYearCreate, db: Session = Depends(get_db)):
 
 @router.get("/classes", response_model=list[SchoolClassOut])
 def list_classes(db: Session = Depends(get_db), user=Depends(get_current_user)):
-    return db.query(SchoolClass).order_by(SchoolClass.id).all()
+    return db.query(SchoolClass).order_by(SchoolClass.sort_order).all()
 
 
 @router.post("/classes", response_model=SchoolClassOut, status_code=201, dependencies=[Depends(require_admin)])

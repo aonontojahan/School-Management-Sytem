@@ -5,15 +5,18 @@ from app.models.assignment import Assignment, AssignmentSubmission  # noqa: F401
 from app.models.attendance import Attendance  # noqa: F401
 from app.models.enums import (  # noqa: F401
     AttendanceStatus,
+    DayOfWeek,
     ExamType,
     FeeTypeName,
     Gender,
     InvoiceStatus,
     PaymentMethod,
     PersonStatus,
+    StudentGroup,
     UserRole,
 )
 from app.models.exam import Exam, Mark  # noqa: F401
 from app.models.fee import FeeInvoice, FeePayment, FeeType  # noqa: F401
 from app.models.people import StudentProfile, TeacherProfile  # noqa: F401
+from app.models.routine import Period, Routine  # noqa: F401
 from app.models.user import RefreshToken, User  # noqa: F401

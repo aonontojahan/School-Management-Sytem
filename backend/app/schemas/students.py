@@ -2,7 +2,7 @@ from datetime import date
 
 from pydantic import BaseModel, EmailStr
 
-from app.models.enums import Gender, PersonStatus
+from app.models.enums import Gender, PersonStatus, StudentGroup
 
 
 class StudentBase(BaseModel):
@@ -14,8 +14,10 @@ class StudentBase(BaseModel):
     phone: str | None = None
     address: str | None = None
     admission_date: date | None = None
+    academic_year_id: int | None = None
     class_id: int | None = None
     section_id: int | None = None
+    group: StudentGroup | None = None
     roll_number: int | None = None
     division: str | None = None
     guardian_name: str | None = None
@@ -36,8 +38,10 @@ class StudentUpdate(BaseModel):
     phone: str | None = None
     address: str | None = None
     admission_date: date | None = None
+    academic_year_id: int | None = None
     class_id: int | None = None
     section_id: int | None = None
+    group: StudentGroup | None = None
     roll_number: int | None = None
     division: str | None = None
     guardian_name: str | None = None
