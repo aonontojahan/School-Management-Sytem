@@ -19,6 +19,7 @@ class TeacherBase(BaseModel):
 
 class TeacherCreate(TeacherBase):
     user_id: int | None = None
+    initial_password: str | None = None
 
 
 class TeacherUpdate(BaseModel):

@@ -62,8 +62,8 @@ export function Login() {
           onSubmit={handleSubmit(async (v) => {
             setServerError(null);
             try {
-              await login(v.email, v.password);
-              nav("/");
+              const role = await login(v.email, v.password);
+              nav(role === "ADMIN" ? "/admin/dashboard" : "/");
             } catch (e) {
               if (axios.isAxiosError(e)) {
                 const detail = e.response?.data?.detail;

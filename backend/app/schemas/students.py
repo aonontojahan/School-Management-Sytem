@@ -24,6 +24,7 @@ class StudentBase(BaseModel):
 
 class StudentCreate(StudentBase):
     user_id: int | None = None
+    initial_password: str | None = None
 
 
 class StudentUpdate(BaseModel):

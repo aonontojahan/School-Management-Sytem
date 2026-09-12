@@ -1,13 +1,14 @@
 import { Route, Routes, Navigate } from "react-router-dom";
-import { AuthProvider } from "./auth/AuthContext";
+import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { StudentManagement } from "./pages/admin/StudentManagement";
+import { TeacherManagement } from "./pages/admin/TeacherManagement";
+import { SearchPage } from "./pages/SearchPage";
 import {
-  Students,
-  Teachers,
-  Guardians,
   Classes,
   Subjects,
   AttendancePage,
@@ -16,7 +17,6 @@ import {
   FeesPage,
   ResultsPage,
   ReportsPage,
-  ChildrenPage,
   ProfilePage,
 } from "./pages/Tables";
 
@@ -28,26 +28,31 @@ function Shelled({ children, roles }: { children: React.ReactNode; roles?: ("ADM
   );
 }
 
+function HomeRedirect() {
+  const { role } = useAuth();
+  if (role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
+  return <Dashboard />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
-        {/* Spec §3 — role menus. Guards mirror Layout MENUS. */}
-        <Route path="/" element={<Shelled>{<Dashboard />}</Shelled>} />
-        <Route path="/students" element={<Shelled roles={["ADMIN", "TEACHER"]}>{<Students />}</Shelled>} />
-        <Route path="/teachers" element={<Shelled roles={["ADMIN"]}>{<Teachers />}</Shelled>} />
-        <Route path="/guardians" element={<Shelled roles={["ADMIN"]}>{<Guardians />}</Shelled>} />
-        <Route path="/classes" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}>{<Classes />}</Shelled>} />
-        <Route path="/subjects" element={<Shelled roles={["ADMIN"]}>{<Subjects />}</Shelled>} />
-        <Route path="/attendance" element={<Shelled>{<AttendancePage />}</Shelled>} />
-        <Route path="/exams" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}>{<ExamsPage />}</Shelled>} />
-        <Route path="/results" element={<Shelled>{<ResultsPage />}</Shelled>} />
-        <Route path="/fees" element={<Shelled roles={["ADMIN", "GUARDIAN"]}>{<FeesPage />}</Shelled>} />
-        <Route path="/reports" element={<Shelled roles={["ADMIN"]}>{<ReportsPage />}</Shelled>} />
-        <Route path="/assignments" element={<Shelled roles={["TEACHER", "STUDENT"]}>{<AssignmentsPage />}</Shelled>} />
-        <Route path="/children" element={<Shelled roles={["GUARDIAN"]}>{<ChildrenPage />}</Shelled>} />
-        <Route path="/profile" element={<Shelled roles={["STUDENT"]}>{<ProfilePage />}</Shelled>} />
+        <Route path="/" element={<Shelled><HomeRedirect /></Shelled>} />
+        <Route path="/search" element={<Shelled><SearchPage /></Shelled>} />
+        <Route path="/admin/dashboard" element={<Shelled roles={["ADMIN"]}><AdminDashboard /></Shelled>} />
+        <Route path="/students" element={<Shelled roles={["ADMIN"]}><StudentManagement /></Shelled>} />
+        <Route path="/teachers" element={<Shelled roles={["ADMIN"]}><TeacherManagement /></Shelled>} />
+        <Route path="/classes" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><Classes /></Shelled>} />
+        <Route path="/subjects" element={<Shelled roles={["ADMIN"]}><Subjects /></Shelled>} />
+        <Route path="/attendance" element={<Shelled><AttendancePage /></Shelled>} />
+        <Route path="/exams" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><ExamsPage /></Shelled>} />
+        <Route path="/results" element={<Shelled><ResultsPage /></Shelled>} />
+        <Route path="/fees" element={<Shelled roles={["ADMIN"]}><FeesPage /></Shelled>} />
+        <Route path="/reports" element={<Shelled roles={["ADMIN"]}><ReportsPage /></Shelled>} />
+        <Route path="/assignments" element={<Shelled roles={["TEACHER", "STUDENT"]}><AssignmentsPage /></Shelled>} />
+        <Route path="/profile" element={<Shelled roles={["STUDENT"]}><ProfilePage /></Shelled>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
