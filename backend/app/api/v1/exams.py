@@ -21,9 +21,14 @@ router = APIRouter(prefix="/exams", tags=["exams"])
 def list_exams(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     if user.role.value == "STUDENT":
         from app.models.people import StudentProfile
+        from sqlalchemy import or_
         student = db.query(StudentProfile).filter(StudentProfile.user_id == user.id).first()
         if student and student.class_id:
-            return db.query(Exam).filter(Exam.class_id == student.class_id).order_by(Exam.id.desc()).all()
+            return db.query(Exam).filter(
+                or_(Exam.class_id == student.class_id, Exam.class_id.is_(None))
+            ).order_by(Exam.id.desc()).all()
+        else:
+            return db.query(Exam).filter(Exam.class_id.is_(None)).order_by(Exam.id.desc()).all()
     return db.query(Exam).order_by(Exam.id.desc()).all()
 
 
@@ -104,6 +109,201 @@ def upsert_marks(exam_id: int, data: MarkBulkIn, db: Session = Depends(get_db), 
     for r in out:
         db.refresh(r)
     return out
+
+
+@router.get("/me/marks")
+def my_marks(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Student: get own marks for an exam."""
+    student = db.query(StudentProfile).filter(StudentProfile.user_id == user.id).first()
+    if not student:
+        raise HTTPException(404, "No student profile linked to this login")
+
+    marks = db.query(Mark).filter(Mark.exam_id == exam_id, Mark.student_id == student.id).all()
+    exam = db.get(Exam, exam_id)
+    rows = []
+    for mk in marks:
+        subj = db.get(Subject, mk.subject_id)
+        rows.append(ReportCardRow(subject_id=mk.subject_id, subject_name=subj.name if subj else "?", marks=mk.marks_obtained, grade=mk.grade, remarks=mk.remarks))
+
+    summary = summarize([m.marks_obtained for m in marks])
+    total_possible = len(marks) * (exam.total_marks if exam else 100) if marks else 0
+    pct = round(summary["total"] / total_possible * 100, 2) if total_possible else 0.0
+
+    return ReportCardOut(
+        student_id=student.id,
+        student_name=f"{student.first_name} {student.last_name}",
+        exam_id=exam_id,
+        rows=rows,
+        total=summary["total"],
+        percentage=pct,
+        gpa=summary["gpa"],
+        result=summary["result"],
+    )
+
+
+@router.get("/all-marks")
+def admin_all_marks(
+    exam_id: int | None = None,
+    class_id: int | None = None,
+    section_id: int | None = None,
+    student_id: int | None = None,
+    q: str | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_admin),
+):
+    """Admin: get all marks with filters. Returns grouped by student."""
+    q_marks = db.query(Mark)
+    if exam_id:
+        q_marks = q_marks.filter(Mark.exam_id == exam_id)
+    if student_id:
+        q_marks = q_marks.filter(Mark.student_id == student_id)
+
+    marks = q_marks.all()
+
+    # Filter by class/section via student profile
+    if class_id or section_id or q:
+        filtered = []
+        for m in marks:
+            student = db.get(StudentProfile, m.student_id)
+            if not student:
+                continue
+            if class_id and student.class_id != class_id:
+                continue
+            if section_id and student.section_id != section_id:
+                continue
+            if q:
+                like = f"%{q}%"
+                full_name = f"{student.first_name} {student.last_name}"
+                if not (full_name.lower().startswith(q.lower()) or student.student_code.lower().startswith(q.lower())):
+                    continue
+            filtered.append(m)
+        marks = filtered
+
+    # Group by student
+    students_map: dict[int, dict] = {}
+    for m in marks:
+        sid = m.student_id
+        if sid not in students_map:
+            student = db.get(StudentProfile, sid)
+            exam = db.get(Exam, m.exam_id)
+            students_map[sid] = {
+                "student_id": sid,
+                "student_name": f"{student.first_name} {student.last_name}" if student else "?",
+                "student_code": student.student_code if student else "?",
+                "roll_number": student.roll_number if student else None,
+                "class_id": student.class_id if student else None,
+                "section_id": student.section_id if student else None,
+                "exam_id": m.exam_id,
+                "exam_name": exam.name if exam else "?",
+                "marks": [],
+                "total": 0.0,
+                "gpa": 0.0,
+                "result": "N/A",
+            }
+        subj = db.get(Subject, m.subject_id)
+        students_map[sid]["marks"].append({
+            "subject_id": m.subject_id,
+            "subject_name": subj.name if subj else "?",
+            "marks_obtained": m.marks_obtained,
+            "grade": m.grade,
+            "gpa_point": m.gpa_point,
+            "remarks": m.remarks,
+        })
+        students_map[sid]["total"] += m.marks_obtained
+
+    # Compute GPA per student
+    for entry in students_map.values():
+        if entry["marks"]:
+            gpas = [mk["gpa_point"] for mk in entry["marks"]]
+            entry["gpa"] = round(sum(gpas) / len(gpas), 2)
+            passed = all(mk["marks_obtained"] >= 33 for mk in entry["marks"])
+            entry["result"] = "PASS" if passed else "FAIL"
+
+    result = sorted(students_map.values(), key=lambda x: (x["class_id"] or 0, x["section_id"] or 0, x["roll_number"] or 0))
+    return result
+
+
+@router.get("/students-marks")
+def teacher_students_marks(
+    exam_id: int,
+    class_id: int,
+    section_id: int | None = None,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_teacher),
+):
+    """Teacher: get students + existing marks for an exam+class+section."""
+    teacher = db.query(TeacherProfile).filter(TeacherProfile.user_id == user.id).first()
+    if not teacher:
+        raise HTTPException(404, "Teacher profile not found")
+
+    # Get teacher's assigned subject IDs
+    teacher_subject_ids = {s.id for s in teacher.subjects}
+
+    # Get subjects for this class
+    cls = db.get(SchoolClass, class_id)
+    if not cls:
+        raise HTTPException(404, "Class not found")
+
+    class_subjects_list = cls.subjects
+    class_subject_ids = {s.id for s in class_subjects_list}
+
+    # Subjects the teacher can grade for this class
+    assignable_subject_ids = teacher_subject_ids & class_subject_ids
+    assignable_subjects = [s for s in class_subjects_list if s.id in assignable_subject_ids]
+
+    # Get students
+    student_q = db.query(StudentProfile).filter(StudentProfile.class_id == class_id, StudentProfile.status == "ACTIVE")
+    if section_id:
+        student_q = student_q.filter(StudentProfile.section_id == section_id)
+    students = student_q.order_by(StudentProfile.roll_number.asc().nullslast()).all()
+
+    # Get existing marks for this exam
+    student_ids = [s.id for s in students]
+    existing_marks = db.query(Mark).filter(
+        Mark.exam_id == exam_id,
+        Mark.student_id.in_(student_ids),
+    ).all()
+
+    marks_by_student: dict[int, list] = {}
+    for m in existing_marks:
+        marks_by_student.setdefault(m.student_id, []).append({
+        })
+
+    # Build student list with marks
+    students_data = []
+    for s in students:
+        s_marks = db.query(Mark).filter(Mark.exam_id == exam_id, Mark.student_id == s.id).all()
+        marks_dict = {m.subject_id: m for m in s_marks}
+        subjects_data = []
+        for subj in assignable_subjects:
+            m = marks_dict.get(subj.id)
+            subjects_data.append({
+                "subject_id": subj.id,
+                "subject_name": subj.name,
+                "marks_obtained": m.marks_obtained if m else None,
+                "grade": m.grade if m else None,
+                "gpa_point": m.gpa_point if m else None,
+                "remarks": m.remarks if m else None,
+            })
+        students_data.append({
+            "student_id": s.id,
+            "student_name": f"{s.first_name} {s.last_name}",
+            "student_code": s.student_code,
+            "roll_number": s.roll_number,
+            "subjects": subjects_data,
+        })
+
+    return {
+        "exam_id": exam_id,
+        "class_id": class_id,
+        "section_id": section_id,
+        "assignable_subjects": [{"id": s.id, "name": s.name} for s in assignable_subjects],
+        "students": students_data,
+    }
 
 
 @router.get("/{exam_id}/marks", response_model=list[MarkOut])

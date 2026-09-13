@@ -7,7 +7,7 @@ from app.models.enums import ExamType
 
 class ExamCreate(BaseModel):
     academic_year_id: int
-    class_id: int
+    class_id: int | None = None
     name: str
     exam_type: ExamType
     total_marks: int = Field(100, ge=1)

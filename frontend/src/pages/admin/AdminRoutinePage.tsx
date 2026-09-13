@@ -709,18 +709,27 @@ function AssignModal({
   const [entries, setEntries] = useState<{ class_id: number; section_id: number; subject_id: number; day: string; period_id: number; group?: string }[]>([
     { class_id: 0, section_id: 0, subject_id: 0, day: "SUNDAY", period_id: defaultPeriodId },
   ]);
+  const [classSubjects, setClassSubjects] = useState<Record<number, DropdownItem[]>>({});
 
   const addEntry = () => {
     setEntries(prev => [...prev, { class_id: 0, section_id: 0, subject_id: 0, day: "SUNDAY", period_id: defaultPeriodId }]);
   };
   const removeEntry = (i: number) => setEntries(prev => prev.filter((_, idx) => idx !== i));
-  const updateEntry = (i: number, field: string, value: number | string) => {
+  const updateEntry = async (i: number, field: string, value: number | string) => {
     setEntries(prev => prev.map((e, idx) => {
       if (idx !== i) return e;
       const next = { ...e, [field]: value };
-      if (field === "class_id") { next.section_id = 0; next.group = undefined; }
+      if (field === "class_id") { next.section_id = 0; next.group = undefined; next.subject_id = 0; }
       return next;
     }));
+    if (field === "class_id" && value && !classSubjects[value as number]) {
+      try {
+        const res = await api.get(`/admin/class-subjects?class_id=${value}`);
+        setClassSubjects(prev => ({ ...prev, [value as number]: res.data }));
+      } catch {
+        setClassSubjects(prev => ({ ...prev, [value as number]: [] }));
+      }
+    }
   };
 
   const { data: wlData } = useQuery({
@@ -779,6 +788,7 @@ function AssignModal({
           const cn = classNum(entry.class_id);
           const showGroup = cn === "9" || cn === "10";
           const sections = entry.class_id ? allSections.filter(s => s.class_id === entry.class_id) : [];
+          const availableSubjects = entry.class_id ? (classSubjects[entry.class_id] || []) : subjects;
 
           return (
             <div key={i} className="border border-slate-200 rounded-xl p-4 space-y-3">
@@ -823,9 +833,12 @@ function AssignModal({
                   <label className="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
                   <select value={entry.subject_id || ""} onChange={e => updateEntry(i, "subject_id", Number(e.target.value))}
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value={0}>Select…</option>
-                    {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    <option value={0}>{entry.class_id ? "Select class first…" : "Select…"}</option>
+                    {availableSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
+                  {entry.class_id && availableSubjects.length === 0 && (
+                    <p className="text-[10px] text-amber-600 mt-1">No subjects assigned to this class</p>
+                  )}
                 </div>
                 {showGroup && (
                   <div className="col-span-2">

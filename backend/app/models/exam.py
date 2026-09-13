@@ -15,7 +15,7 @@ class Exam(Base):
     academic_year_id: Mapped[int] = mapped_column(
         ForeignKey("academic_years.id", ondelete="CASCADE"), index=True
     )
-    class_id: Mapped[int] = mapped_column(ForeignKey("classes.id", ondelete="CASCADE"), index=True)
+    class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id", ondelete="CASCADE"), index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(128))  # e.g. "Mid Term Examination"
     exam_type: Mapped[ExamType] = mapped_column()
     total_marks: Mapped[int] = mapped_column(default=100)
@@ -26,7 +26,7 @@ class Exam(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     academic_year: Mapped["AcademicYear"] = relationship(back_populates="exams")
-    school_class: Mapped["SchoolClass"] = relationship(back_populates="exams")
+    school_class: Mapped["SchoolClass | None"] = relationship(back_populates="exams")
     marks: Mapped[list["Mark"]] = relationship(back_populates="exam", cascade="all, delete-orphan")
     routines: Mapped[list["ExamRoutine"]] = relationship(back_populates="exam", cascade="all, delete-orphan")
 
