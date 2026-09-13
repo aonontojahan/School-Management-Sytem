@@ -23,20 +23,6 @@ interface AdminStats {
     pending: number;
     overdue: number;
   };
-  financial?: {
-    fee_collected: number;
-    salary_paid: number;
-    revenue: number;
-  };
-}
-
-interface FinancialSummary {
-  fee_collected: number;
-  salary_paid: number;
-  revenue: number;
-  pending_fees: number;
-  paid_invoices: number;
-  total_invoices: number;
 }
 
 interface MonthlyData {
@@ -249,11 +235,6 @@ export function AdminDashboard() {
     queryFn: async () => (await api.get("/dashboard/class-attendance")).data as ClassAttendance[],
   });
 
-  const { data: financial } = useQuery({
-    queryKey: ["financial-summary"],
-    queryFn: async () => (await api.get("/dashboard/financial-summary")).data as FinancialSummary,
-  });
-
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -429,35 +410,6 @@ export function AdminDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Financial Summary */}
-      {financial && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-slate-700">Financial Summary — {financial.paid_invoices}/{financial.total_invoices} invoices paid</h3>
-            <Link to="/reports" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View Reports →</Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-              <p className="text-xs font-semibold text-emerald-600">Fee Collected</p>
-              <p className="text-2xl font-extrabold text-emerald-700 mt-1">${financial.fee_collected.toLocaleString()}</p>
-            </div>
-            <div className="bg-red-50 rounded-xl p-4 border border-red-100">
-              <p className="text-xs font-semibold text-red-600">Salary Paid</p>
-              <p className="text-2xl font-extrabold text-red-700 mt-1">${financial.salary_paid.toLocaleString()}</p>
-            </div>
-            <div className={`rounded-xl p-4 border ${financial.revenue >= 0 ? "bg-indigo-50 border-indigo-100" : "bg-red-50 border-red-100"}`}>
-              <p className={`text-xs font-semibold ${financial.revenue >= 0 ? "text-indigo-600" : "text-red-600"}`}>Net Revenue</p>
-              <p className={`text-2xl font-extrabold mt-1 ${financial.revenue >= 0 ? "text-indigo-700" : "text-red-700"}`}>${financial.revenue.toLocaleString()}</p>
-            </div>
-          </div>
-          <div className="flex gap-3 mt-4">
-            <Link to="/fees" className="flex-1 text-center py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition">Manage Fees</Link>
-            <Link to="/salary" className="flex-1 text-center py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 transition">Manage Salary</Link>
-            <Link to="/reports" className="flex-1 text-center py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition">View Reports</Link>
-          </div>
-        </div>
-      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -19,6 +19,14 @@ from app.schemas.salary import (
 
 router = APIRouter(prefix="/salary", tags=["salary"])
 
+# Designation-based salary amounts (TK)
+DESIGNATION_SALARIES = {
+    "HEAD TEACHER": 22000,
+    "SENIOR TEACHER": 20000,
+    "JUNIOR TEACHER": 16000,
+}
+DEFAULT_SALARY = 16000
+
 
 # ── Admin: Salary Structure ──────────────────────────────────────────────────
 
@@ -33,6 +41,7 @@ def list_structures(db: Session = Depends(get_db)):
             id=s.id,
             teacher_id=s.teacher_id,
             teacher_name=f"{teacher.first_name} {teacher.last_name}" if teacher else None,
+            designation=teacher.designation if teacher else None,
             monthly_amount=float(s.monthly_amount),
             effective_from=s.effective_from,
         ))
@@ -64,6 +73,33 @@ def delete_structure(structure_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "Salary structure not found")
     db.delete(s)
     db.commit()
+
+
+@router.post("/structures/auto-generate", dependencies=[Depends(require_admin)])
+def auto_generate_structures(db: Session = Depends(get_db)):
+    """Auto-create/update salary structures for all teachers based on designation."""
+    teachers = db.query(TeacherProfile).all()
+    created = 0
+    updated = 0
+    for t in teachers:
+        designation = (t.designation or "").strip().upper()
+        amount = DESIGNATION_SALARIES.get(designation, DEFAULT_SALARY)
+
+        existing = db.query(SalaryStructure).filter(
+            SalaryStructure.teacher_id == t.id
+        ).first()
+
+        if existing:
+            if float(existing.monthly_amount) != amount:
+                existing.monthly_amount = amount
+                updated += 1
+        else:
+            s = SalaryStructure(teacher_id=t.id, monthly_amount=amount)
+            db.add(s)
+            created += 1
+
+    db.commit()
+    return {"created": created, "updated": updated, "total_teachers": len(teachers)}
 
 
 # ── Admin: Salary Payments ──────────────────────────────────────────────────

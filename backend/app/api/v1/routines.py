@@ -47,6 +47,7 @@ def list_routines(
     day: DayOfWeek | None = None,
     teacher_id: int | None = None,
     academic_year_id: int | None = None,
+    group: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -62,6 +63,8 @@ def list_routines(
         query = query.filter(Routine.teacher_id == teacher_id)
     if academic_year_id:
         query = query.filter(Routine.academic_year_id == academic_year_id)
+    if group:
+        query = query.filter((Routine.group == group) | (Routine.group.is_(None)))
 
     routines = query.order_by(Routine.day, Routine.period_id).all()
 
@@ -299,6 +302,7 @@ def routine_grid(
     class_id: int = Query(...),
     section_id: int = Query(...),
     academic_year_id: int | None = None,
+    group: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -309,6 +313,8 @@ def routine_grid(
     )
     if academic_year_id:
         query = query.filter(Routine.academic_year_id == academic_year_id)
+    if group:
+        query = query.filter((Routine.group == group) | (Routine.group.is_(None)))
 
     routines = query.order_by(Routine.day, Routine.period_id).all()
 

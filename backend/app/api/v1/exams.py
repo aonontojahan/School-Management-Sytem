@@ -1,9 +1,12 @@
+from datetime import date, time
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user, require_admin, require_teacher
 from app.db.session import get_db
-from app.models.academic import SchoolClass, Section, Subject
+from app.models.academic import SchoolClass, Section, Subject, class_group_subjects
 from app.models.enums import UserRole
 from app.models.exam import Exam, ExamRoutine, Mark
 from app.models.people import StudentProfile, TeacherProfile
@@ -140,6 +143,7 @@ def report_card(exam_id: int, student_id: int, db: Session = Depends(get_db), us
 def list_exam_routines(
     exam_id: int | None = None,
     class_id: int | None = None,
+    group: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -148,10 +152,16 @@ def list_exam_routines(
         q = q.filter(ExamRoutine.exam_id == exam_id)
     if class_id:
         q = q.filter(ExamRoutine.class_id == class_id)
+    if group:
+        q = q.filter(ExamRoutine.group == group)
     if user.role.value == "STUDENT":
         student = db.query(StudentProfile).filter(StudentProfile.user_id == user.id).first()
         if student and student.class_id:
             q = q.filter(ExamRoutine.class_id == student.class_id)
+            if student.group:
+                q = q.filter(
+                    (ExamRoutine.group == student.group) | (ExamRoutine.group.is_(None))
+                )
     if user.role.value == "TEACHER":
         teacher = db.query(TeacherProfile).filter(TeacherProfile.user_id == user.id).first()
         if teacher:
@@ -177,6 +187,7 @@ def list_exam_routines(
             "subject_name": subj.name if subj else None,
             "teacher_id": r.teacher_id,
             "teacher_name": f"{teacher.first_name} {teacher.last_name}" if teacher else None,
+            "group": r.group,
             "exam_date": r.exam_date.isoformat() if r.exam_date else None,
             "start_time": r.start_time.strftime("%H:%M") if r.start_time else None,
             "end_time": r.end_time.strftime("%H:%M") if r.end_time else None,
@@ -266,6 +277,264 @@ def delete_exam_routine(routine_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "Exam routine not found")
     db.delete(r)
     db.commit()
+
+
+@router.put("/routines/{routine_id}", dependencies=[Depends(require_admin)])
+def update_exam_routine(routine_id: int, data: ExamRoutineCreate, db: Session = Depends(get_db)):
+    r = db.get(ExamRoutine, routine_id)
+    if not r:
+        raise HTTPException(404, "Exam routine not found")
+    for field, value in data.model_dump().items():
+        setattr(r, field, value)
+    db.commit()
+    db.refresh(r)
+
+    cls = db.get(SchoolClass, r.class_id)
+    subj = db.get(Subject, r.subject_id)
+    teacher = db.get(TeacherProfile, r.teacher_id) if r.teacher_id else None
+    exam = db.get(Exam, r.exam_id)
+    return {
+        "id": r.id,
+        "class_name": cls.name if cls else None,
+        "subject_name": subj.name if subj else None,
+        "teacher_name": f"{teacher.first_name} {teacher.last_name}" if teacher else None,
+        "exam_name": exam.name if exam else None,
+        "exam_date": r.exam_date.isoformat() if r.exam_date else None,
+        "start_time": r.start_time.strftime("%H:%M") if r.start_time else None,
+        "end_time": r.end_time.strftime("%H:%M") if r.end_time else None,
+        "room": r.room,
+    }
+
+
+@router.get("/routines/auto-generate", dependencies=[Depends(require_admin)])
+def auto_generate_routine_preview(
+    exam_id: int, class_id: int, start_date: str,
+    group: str | None = Query(None, description="SCIENCE, HUMANITIES, BUSINESS_STUDIES"),
+    db: Session = Depends(get_db),
+):
+    """Auto-generate exam routine preview: 45min exams, 15min gaps, 6 slots/day, up to 3 days.
+    If group is provided, routine includes common + group-specific subjects."""
+    from datetime import timedelta
+
+    exam = db.get(Exam, exam_id)
+    if not exam:
+        raise HTTPException(404, "Exam not found")
+    cls = db.get(SchoolClass, class_id)
+    if not cls:
+        raise HTTPException(404, "Class not found")
+
+    # Common subjects (all groups)
+    common_subjects = cls.subjects
+
+    # Group-specific subjects
+    group_subjects = []
+    if group:
+        stmt = (
+            select(Subject)
+            .join(class_group_subjects, class_group_subjects.c.subject_id == Subject.id)
+            .where(
+                class_group_subjects.c.class_id == class_id,
+                class_group_subjects.c.group_name == group,
+            )
+        )
+        group_subjects = list(db.execute(stmt).scalars().all())
+
+    # Combine: common + group-specific (deduplicated)
+    seen_ids = set()
+    subjects = []
+    for s in common_subjects + group_subjects:
+        if s.id not in seen_ids:
+            seen_ids.add(s.id)
+            subjects.append(s)
+
+    if not subjects:
+        raise HTTPException(400, "No subjects assigned to this class" + (f" for group {group}" if group else ""))
+
+    try:
+        day1 = date.fromisoformat(start_date)
+    except ValueError:
+        raise HTTPException(400, "Invalid start_date format (YYYY-MM-DD)")
+
+    # Skip to next weekday
+    while day1.weekday() in (4, 5):  # Fri=4, Sat=5
+        day1 += timedelta(days=1)
+
+    day2 = day1 + timedelta(days=1)
+    while day2.weekday() in (4, 5):
+        day2 += timedelta(days=1)
+
+    day3 = day2 + timedelta(days=1)
+    while day3.weekday() in (4, 5):
+        day3 += timedelta(days=1)
+
+    DAYS = [day1, day2, day3]
+
+    # Fixed 6 time slots: 45min exam + 15min gap
+    SLOTS = [
+        ("09:00", "09:45"),
+        ("10:00", "10:45"),
+        ("11:00", "11:45"),
+        ("12:00", "12:45"),
+        ("13:00", "13:45"),
+        ("14:00", "14:45"),
+    ]
+
+    preview = []
+    for idx, subj in enumerate(subjects):
+        slot_idx = idx % 6
+        day_offset = idx // 6
+        exam_date = DAYS[min(day_offset, 2)]
+
+        st = time.fromisoformat(SLOTS[slot_idx][0])
+        et = time.fromisoformat(SLOTS[slot_idx][1])
+
+        preview.append({
+            "subject_id": subj.id,
+            "subject_name": subj.name,
+            "exam_date": exam_date.isoformat(),
+            "start_time": st.strftime("%H:%M"),
+            "end_time": et.strftime("%H:%M"),
+            "slot": slot_idx + 1,
+            "day": day_offset + 1,
+            "room": None,
+            "teacher_id": None,
+            "teacher_name": None,
+            "group": group,
+        })
+
+    total_days = 1 if len(subjects) <= 6 else (2 if len(subjects) <= 12 else 3)
+    return {
+        "exam_id": exam_id,
+        "exam_name": exam.name,
+        "class_id": class_id,
+        "class_name": cls.name,
+        "group": group,
+        "total_subjects": len(preview),
+        "total_days": total_days,
+        "time_slots": [{"slot": i + 1, "start": s[0], "end": s[1]} for i, s in enumerate(SLOTS)],
+        "items": preview,
+    }
+
+
+@router.post("/routines/auto-generate", status_code=201, dependencies=[Depends(require_admin)])
+def auto_generate_and_save(
+    exam_id: int, class_id: int, start_date: str,
+    group: str | None = Query(None, description="SCIENCE, HUMANITIES, BUSINESS_STUDIES"),
+    db: Session = Depends(get_db), user: User = Depends(get_current_user),
+):
+    """Auto-generate and save exam routine: 45min exams, 15min gaps, 6 slots/day, up to 3 days.
+    If group is provided, routine includes common + group-specific subjects."""
+    from datetime import timedelta
+
+    exam = db.get(Exam, exam_id)
+    if not exam:
+        raise HTTPException(404, "Exam not found")
+    cls = db.get(SchoolClass, class_id)
+    if not cls:
+        raise HTTPException(404, "Class not found")
+
+    # Common subjects (all groups)
+    common_subjects = cls.subjects
+
+    # Group-specific subjects
+    group_subjects = []
+    if group:
+        stmt = (
+            select(Subject)
+            .join(class_group_subjects, class_group_subjects.c.subject_id == Subject.id)
+            .where(
+                class_group_subjects.c.class_id == class_id,
+                class_group_subjects.c.group_name == group,
+            )
+        )
+        group_subjects = list(db.execute(stmt).scalars().all())
+
+    # Combine: common + group-specific (deduplicated)
+    seen_ids = set()
+    subjects = []
+    for s in common_subjects + group_subjects:
+        if s.id not in seen_ids:
+            seen_ids.add(s.id)
+            subjects.append(s)
+
+    if not subjects:
+        raise HTTPException(400, "No subjects assigned to this class" + (f" for group {group}" if group else ""))
+
+    try:
+        day1 = date.fromisoformat(start_date)
+    except ValueError:
+        raise HTTPException(400, "Invalid start_date format (YYYY-MM-DD)")
+
+    while day1.weekday() in (4, 5):
+        day1 += timedelta(days=1)
+
+    day2 = day1 + timedelta(days=1)
+    while day2.weekday() in (4, 5):
+        day2 += timedelta(days=1)
+
+    day3 = day2 + timedelta(days=1)
+    while day3.weekday() in (4, 5):
+        day3 += timedelta(days=1)
+
+    DAYS = [day1, day2, day3]
+
+    SLOTS = [
+        ("09:00", "09:45"),
+        ("10:00", "10:45"),
+        ("11:00", "11:45"),
+        ("12:00", "12:45"),
+        ("13:00", "13:45"),
+        ("14:00", "14:45"),
+    ]
+
+    # Delete existing routines for this exam+class+group
+    delete_filter = [
+        ExamRoutine.exam_id == exam_id,
+        ExamRoutine.class_id == class_id,
+    ]
+    if group:
+        delete_filter.append(ExamRoutine.group == group)
+    else:
+        delete_filter.append(ExamRoutine.group.is_(None))
+    db.query(ExamRoutine).filter(*delete_filter).delete()
+
+    created = []
+    for idx, subj in enumerate(subjects):
+        slot_idx = idx % 6
+        day_offset = idx // 6
+        exam_date = DAYS[min(day_offset, 2)]
+
+        st = time.fromisoformat(SLOTS[slot_idx][0])
+        et = time.fromisoformat(SLOTS[slot_idx][1])
+
+        r = ExamRoutine(
+            exam_id=exam_id, class_id=class_id, subject_id=subj.id,
+            group=group,
+            exam_date=exam_date, start_time=st, end_time=et,
+        )
+        db.add(r)
+        created.append(r)
+
+    db.commit()
+    for r in created:
+        db.refresh(r)
+
+    # Notify students + teachers
+    from app.models.notification import Notification
+    from app.models.user import User as UserModel
+    students = db.query(UserModel).filter(UserModel.role == UserRole.STUDENT, UserModel.is_active == True).all()
+    teachers = db.query(UserModel).filter(UserModel.role == UserRole.TEACHER, UserModel.is_active == True).all()
+    for u in students + teachers:
+        n = Notification(
+            user_id=u.id,
+            title=f"Exam Routine Published: {exam.name}",
+            message=f"The exam routine for '{exam.name}' ({cls.name}) has been published. Check your exam schedule.",
+            type="EXAM", ref_id=exam_id,
+        )
+        db.add(n)
+    db.commit()
+
+    return {"generated": len(created), "class_name": cls.name, "exam_name": exam.name}
 
 
 @router.delete("/routines", status_code=204, dependencies=[Depends(require_admin)])

@@ -16,6 +16,7 @@ class SalaryStructureOut(BaseModel):
     id: int
     teacher_id: int
     teacher_name: str | None = None
+    designation: str | None = None
     monthly_amount: float
     effective_from: date | None = None
 

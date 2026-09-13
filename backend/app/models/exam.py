@@ -66,6 +66,7 @@ class ExamRoutine(Base):
     section_id: Mapped[int | None] = mapped_column(ForeignKey("sections.id", ondelete="SET NULL"))
     subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     teacher_id: Mapped[int | None] = mapped_column(ForeignKey("teacher_profiles.id", ondelete="SET NULL"))
+    group: Mapped[str | None] = mapped_column(String(32))
     exam_date: Mapped[date] = mapped_column(Date)
     start_time: Mapped[time] = mapped_column(Time)
     end_time: Mapped[time] = mapped_column(Time)

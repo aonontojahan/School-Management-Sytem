@@ -28,6 +28,7 @@ class ExamRoutineCreate(BaseModel):
     section_id: int | None = None
     subject_id: int
     teacher_id: int | None = None
+    group: str | None = None
     exam_date: date
     start_time: time
     end_time: time

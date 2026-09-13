@@ -33,16 +33,16 @@ export function TeacherSalaryPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Monthly Salary</p>
-          <p className="text-2xl font-extrabold text-slate-900 mt-1">${data?.structure?.monthly_amount?.toLocaleString() || "—"}</p>
+          <p className="text-2xl font-extrabold text-slate-900 mt-1">৳{data?.structure?.monthly_amount?.toLocaleString() || "—"}</p>
           {data?.structure?.effective_from && <p className="text-[10px] text-slate-400 mt-1">Since {data.structure.effective_from}</p>}
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Received</p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">${totalPaid.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 mt-1">৳{totalPaid.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Pending</p>
-          <p className="text-2xl font-extrabold text-amber-600 mt-1">${totalPending.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-amber-600 mt-1">৳{totalPending.toLocaleString()}</p>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export function TeacherSalaryPage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{MONTHS[p.month]} {p.year}</p>
-                    <p className="text-xs text-slate-500">${p.amount.toLocaleString()}</p>
+                    <p className="text-xs text-slate-500">৳{p.amount.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

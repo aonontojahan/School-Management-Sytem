@@ -95,15 +95,15 @@ export function AdminFeesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Collected</p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">${totalCollected.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 mt-1">৳{totalCollected.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Pending / Overdue</p>
-          <p className="text-2xl font-extrabold text-amber-600 mt-1">${totalPending.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-amber-600 mt-1">৳{totalPending.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Due</p>
-          <p className="text-2xl font-extrabold text-red-600 mt-1">${totalDue.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-red-600 mt-1">৳{totalDue.toLocaleString()}</p>
         </div>
       </div>
 
@@ -206,7 +206,7 @@ export function AdminFeesPage() {
                       <p className="text-sm font-semibold text-slate-900">{student ? `${student.first_name} ${student.last_name}` : `Student #${inv.student_id}`}</p>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_COLORS[inv.status] || "bg-slate-100 text-slate-600"}`}>{inv.status}</span>
                     </div>
-                    <p className="text-xs text-slate-500">{feeType?.name || "Fee"} — ${inv.total_amount} total, ${inv.paid_amount} paid, ${inv.due_amount} due</p>
+                    <p className="text-xs text-slate-500">{feeType?.name || "Fee"} — ৳{inv.total_amount} total, ৳{inv.paid_amount} paid, ৳{inv.due_amount} due</p>
                     <p className="text-[10px] text-slate-400 mt-1">Due: {inv.due_date || "—"}</p>
                   </div>
                   <div className="flex gap-2 ml-4 shrink-0">

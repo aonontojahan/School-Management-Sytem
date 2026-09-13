@@ -68,6 +68,7 @@ export function AdminRoutinePage() {
 function ClassView({ classes, allSections, teachers, subjects, periods }: { classes: DropdownItem[]; allSections: DropdownItem[]; teachers: DropdownItem[]; subjects: DropdownItem[]; periods: Period[] }) {
   const [selectedClass, setSelectedClass] = useState<number | "">("");
   const [selectedSection, setSelectedSection] = useState<number | "">("");
+  const [selectedGroup, setSelectedGroup] = useState("");
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -76,22 +77,28 @@ function ClassView({ classes, allSections, teachers, subjects, periods }: { clas
   const [form, setForm] = useState<Partial<RoutineEntry>>({});
 
   const sections = selectedClass ? allSections.filter(s => s.class_id === selectedClass) : [];
+  const selectedClassName = classes.find(c => c.id === selectedClass)?.name || "";
+  const classNum = parseInt(selectedClassName.replace("Class ", "").trim()) || 0;
+  const hasGroups = classNum >= 9;
 
   const { data: gridData } = useQuery({
-    queryKey: ["routine-grid", selectedClass, selectedSection],
+    queryKey: ["routine-grid", selectedClass, selectedSection, selectedGroup],
     queryFn: async () => {
       if (!selectedClass || !selectedSection) return null;
-      return (await api.get(`/routines/grid?class_id=${selectedClass}&section_id=${selectedSection}`)).data as { periods: Period[]; days: string[]; grid: Record<string, Record<number, unknown>> };
+      const params = new URLSearchParams({ class_id: String(selectedClass), section_id: String(selectedSection) });
+      if (selectedGroup) params.set("group", selectedGroup);
+      return (await api.get(`/routines/grid?${params}`)).data as { periods: Period[]; days: string[]; grid: Record<string, Record<number, unknown>> };
     },
     enabled: !!selectedClass && !!selectedSection,
   });
 
   const { data: routines } = useQuery({
-    queryKey: ["admin-routines", selectedClass, selectedSection],
+    queryKey: ["admin-routines", selectedClass, selectedSection, selectedGroup],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedClass) params.set("class_id", String(selectedClass));
       if (selectedSection) params.set("section_id", String(selectedSection));
+      if (selectedGroup) params.set("group", selectedGroup);
       return (await api.get(`/routines?${params.toString()}`)).data as RoutineEntry[];
     },
     enabled: !!selectedClass && !!selectedSection,
@@ -134,7 +141,7 @@ function ClassView({ classes, allSections, teachers, subjects, periods }: { clas
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label className="block text-xs font-medium text-slate-500 mb-1">Class</label>
-            <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value ? Number(e.target.value) : ""); setSelectedSection(""); }}
+            <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value ? Number(e.target.value) : ""); setSelectedSection(""); setSelectedGroup(""); }}
               className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition">
               <option value="">Select class…</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -147,6 +154,16 @@ function ClassView({ classes, allSections, teachers, subjects, periods }: { clas
                 className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition">
                 <option value="">All Sections</option>
                 {sections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+          )}
+          {hasGroups && (
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Group</label>
+              <select value={selectedGroup} onChange={e => setSelectedGroup(e.target.value)}
+                className="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-slate-50 focus:outline-none focus:bg-white focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 transition">
+                <option value="">All Groups</option>
+                {GROUPS.map(g => <option key={g} value={g}>{g.replace("_", " ")}</option>)}
               </select>
             </div>
           )}

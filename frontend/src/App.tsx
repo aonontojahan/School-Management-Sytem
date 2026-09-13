@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
+import { LandingPage } from "./pages/LandingPage";
 import { Dashboard } from "./pages/Dashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { StudentDashboard } from "./pages/StudentDashboard";
@@ -49,8 +50,9 @@ function Shelled({ children, roles }: { children: React.ReactNode; roles?: ("ADM
   );
 }
 
-function HomeRedirect() {
+function HomeRouter() {
   const { role } = useAuth();
+  if (!role) return <LandingPage />;
   if (role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
   if (role === "STUDENT") return <Navigate to="/student/dashboard" replace />;
   if (role === "TEACHER") return <TeacherDashboard />;
@@ -100,8 +102,8 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/" element={<HomeRouter />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Shelled><HomeRedirect /></Shelled>} />
         <Route path="/search" element={<Shelled><SearchPage /></Shelled>} />
         <Route path="/admin/dashboard" element={<Shelled roles={["ADMIN"]}><AdminDashboard /></Shelled>} />
         <Route path="/student/dashboard" element={<Shelled roles={["STUDENT"]}><StudentDashboard /></Shelled>} />

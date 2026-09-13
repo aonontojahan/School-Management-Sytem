@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 
 interface DropdownItem { id: number; name: string; }
-interface Structure { id: number; teacher_id: number; teacher_name: string | null; monthly_amount: number; effective_from: string | null; }
+interface Structure { id: number; teacher_id: number; teacher_name: string | null; designation: string | null; monthly_amount: number; effective_from: string | null; }
 interface Payment { id: number; salary_structure_id: number; teacher_id: number; teacher_name: string | null; month: number; year: number; amount: number; status: string; paid_at: string | null; }
 
 const MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -12,11 +12,14 @@ const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-amber-100 text-amber-700 border-amber-200",
   OVERDUE: "bg-red-100 text-red-700 border-red-200",
 };
+const DESIGNATION_AMOUNTS: Record<string, number> = {
+  "HEAD TEACHER": 22000,
+  "SENIOR TEACHER": 20000,
+  "JUNIOR TEACHER": 16000,
+};
 
 export function AdminSalaryPage() {
   const queryClient = useQueryClient();
-  const [showStructureForm, setShowStructureForm] = useState(false);
-  const [structForm, setStructForm] = useState({ teacher_id: "", monthly_amount: "" });
   const [genMonth, setGenMonth] = useState(String(new Date().getMonth() + 1));
   const [genYear, setGenYear] = useState(String(new Date().getFullYear()));
   const [filterMonth, setFilterMonth] = useState("");
@@ -37,18 +40,9 @@ export function AdminSalaryPage() {
     },
   });
 
-  const { data: teachers } = useQuery({
-    queryKey: ["admin-teachers-list"],
-    queryFn: async () => (await api.get("/admin/teachers")).data as DropdownItem[],
-  });
-
-  const createStructMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => (await api.post("/salary/structures", payload)).data,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["salary-structures"] });
-      setShowStructureForm(false);
-      setStructForm({ teacher_id: "", monthly_amount: "" });
-    },
+  const autoGenMutation = useMutation({
+    mutationFn: async () => (await api.post("/salary/structures/auto-generate")).data as { created: number; updated: number; total_teachers: number },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["salary-structures"] }),
   });
 
   const generateMutation = useMutation({
@@ -73,29 +67,19 @@ export function AdminSalaryPage() {
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-violet-700 to-violet-500 rounded-2xl p-6 text-white shadow">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-extrabold">Salary Management</h2>
-            <p className="text-violet-100 text-sm mt-1">Set teacher salaries, generate monthly payouts and track payments</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowStructureForm(!showStructureForm)}
-              className="px-4 py-2 rounded-xl bg-white/20 text-white text-sm font-semibold hover:bg-white/30 transition">
-              {showStructureForm ? "Cancel" : "+ Set Salary"}
-            </button>
-          </div>
-        </div>
+        <h2 className="text-2xl font-extrabold">Salary Management</h2>
+        <p className="text-violet-100 text-sm mt-1">Auto-generate salaries by designation · Generate monthly payouts · Track payments</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Paid</p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">${totalPaid.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 mt-1">৳{totalPaid.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Pending</p>
-          <p className="text-2xl font-extrabold text-amber-600 mt-1">${totalPending.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-amber-600 mt-1">৳{totalPending.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Teachers with Salary</p>
@@ -103,37 +87,30 @@ export function AdminSalaryPage() {
         </div>
       </div>
 
-      {/* Set Salary Structure Form */}
-      {showStructureForm && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <h3 className="text-sm font-bold text-slate-700 mb-4">Set Teacher Salary</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Teacher *</label>
-              <select value={structForm.teacher_id} onChange={(e) => setStructForm({ ...structForm, teacher_id: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
-                <option value="">Select teacher...</option>
-                {teachers?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Monthly Amount *</label>
-              <input type="number" value={structForm.monthly_amount} onChange={(e) => setStructForm({ ...structForm, monthly_amount: e.target.value })}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-            </div>
+      {/* Auto-Generate by Designation */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-slate-700">Auto-Generate Salary by Designation</h3>
+            <p className="text-xs text-slate-500 mt-1">Creates salary structures for all teachers based on their designation</p>
           </div>
-          <div className="flex justify-end mt-4 gap-3">
-            <button onClick={() => setShowStructureForm(false)} className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
-            <button onClick={() => {
-              if (!structForm.teacher_id || !structForm.monthly_amount) return;
-              createStructMutation.mutate({ teacher_id: Number(structForm.teacher_id), monthly_amount: Number(structForm.monthly_amount) });
-            }} disabled={createStructMutation.isPending}
-              className="px-6 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 disabled:opacity-50 transition">
-              {createStructMutation.isPending ? "Saving..." : "Save Salary"}
-            </button>
-          </div>
+          <button onClick={() => autoGenMutation.mutate()} disabled={autoGenMutation.isPending}
+            className="px-5 py-2.5 rounded-xl bg-violet-600 text-white text-sm font-semibold hover:bg-violet-700 disabled:opacity-50 transition shadow-sm">
+            {autoGenMutation.isPending ? "Generating..." : "Auto-Generate All"}
+          </button>
         </div>
-      )}
+        {autoGenMutation.isSuccess && (
+          <p className="text-xs text-emerald-600">Done! Created {autoGenMutation.data.created}, Updated {autoGenMutation.data.updated} out of {autoGenMutation.data.total_teachers} teachers.</p>
+        )}
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {Object.entries(DESIGNATION_AMOUNTS).map(([desg, amt]) => (
+            <div key={desg} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span className="text-xs font-bold text-slate-700">{desg}</span>
+              <span className="text-sm font-extrabold text-violet-600">৳{amt.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Generate Monthly Salaries */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5">
@@ -170,17 +147,27 @@ export function AdminSalaryPage() {
         {structuresLoading ? (
           <div className="space-y-3">{[...Array(2)].map((_, i) => <div key={i} className="h-12 bg-slate-50 rounded-xl animate-pulse" />)}</div>
         ) : !structures || structures.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-6">No salary structures set. Click "+ Set Salary" to add one.</p>
+          <p className="text-sm text-slate-400 text-center py-6">No salary structures set. Click "Auto-Generate All" above.</p>
         ) : (
-          <div className="space-y-2">
-            {structures.map(s => (
-              <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">{s.teacher_name || `Teacher #${s.teacher_id}`}</p>
-                  <p className="text-xs text-slate-500">${s.monthly_amount.toLocaleString()}/month</p>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left">
+                  <th className="px-4 py-3 font-semibold text-slate-600">Teacher</th>
+                  <th className="px-4 py-3 font-semibold text-slate-600">Designation</th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 text-right">Monthly Salary</th>
+                </tr>
+              </thead>
+              <tbody>
+                {structures.map(s => (
+                  <tr key={s.id} className="border-b border-slate-100 last:border-0 hover:bg-violet-50/40">
+                    <td className="px-4 py-2.5 font-medium text-slate-900">{s.teacher_name || `Teacher #${s.teacher_id}`}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{s.designation || "—"}</td>
+                    <td className="px-4 py-2.5 text-right font-extrabold text-violet-600">৳{s.monthly_amount.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -210,7 +197,7 @@ export function AdminSalaryPage() {
                     <p className="text-sm font-semibold text-slate-900">{p.teacher_name || `Teacher #${p.teacher_id}`}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${STATUS_COLORS[p.status] || "bg-slate-100 text-slate-600"}`}>{p.status}</span>
                   </div>
-                  <p className="text-xs text-slate-500">{MONTHS[p.month]} {p.year} — ${p.amount.toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">{MONTHS[p.month]} {p.year} — ৳{p.amount.toLocaleString()}</p>
                   {p.paid_at && <p className="text-[10px] text-slate-400">Paid: {new Date(p.paid_at).toLocaleDateString()}</p>}
                 </div>
                 {p.status === "PENDING" && (
