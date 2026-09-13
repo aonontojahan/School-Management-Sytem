@@ -306,15 +306,47 @@ def update_exam_routine(routine_id: int, data: ExamRoutineCreate, db: Session = 
     }
 
 
+def _get_scheduling_rules(exam_type: str):
+    """Return scheduling rules based on exam type.
+    - CLASS_TEST / MONTHLY_TEST: 45-min exams, 6 per day, up to 3 days (max 18 subjects).
+    - MID_TERM / FINAL: 3-hour exams, 2 per day (9-12, 13-16), up to 15 days (max 30 subjects).
+    """
+    if exam_type in ("CLASS_TEST", "MONTHLY_TEST"):
+        return {
+            "slots_per_day": 6,
+            "max_days": 3,
+            "slots": [
+                ("09:00", "09:45"),
+                ("10:00", "10:45"),
+                ("11:00", "11:45"),
+                ("12:00", "12:45"),
+                ("13:00", "13:45"),
+                ("14:00", "14:45"),
+            ],
+        }
+    else:  # MID_TERM, FINAL
+        return {
+            "slots_per_day": 2,
+            "max_days": 15,
+            "slots": [
+                ("09:00", "12:00"),
+                ("13:00", "16:00"),
+            ],
+        }
+
+
 @router.get("/routines/auto-generate", dependencies=[Depends(require_admin)])
 def auto_generate_routine_preview(
     exam_id: int, class_id: int, start_date: str,
     group: str | None = Query(None, description="SCIENCE, HUMANITIES, BUSINESS_STUDIES"),
     db: Session = Depends(get_db),
 ):
-    """Auto-generate exam routine preview: 45min exams, 15min gaps, 6 slots/day, up to 3 days.
+    """Auto-generate exam routine preview.
+    - Monthly: 45-min exams, 6/day, up to 3 days.
+    - Half-yearly/Final: 3-hour exams, 2/day (9-12, 13-16), up to 15 days.
     If group is provided, routine includes common + group-specific subjects."""
     from datetime import timedelta
+    import math
 
     exam = db.get(Exam, exam_id)
     if not exam:
@@ -322,6 +354,8 @@ def auto_generate_routine_preview(
     cls = db.get(SchoolClass, class_id)
     if not cls:
         raise HTTPException(404, "Class not found")
+
+    rules = _get_scheduling_rules(exam.exam_type.value)
 
     # Common subjects (all groups)
     common_subjects = cls.subjects
@@ -351,39 +385,33 @@ def auto_generate_routine_preview(
         raise HTTPException(400, "No subjects assigned to this class" + (f" for group {group}" if group else ""))
 
     try:
-        day1 = date.fromisoformat(start_date)
+        start = date.fromisoformat(start_date)
     except ValueError:
         raise HTTPException(400, "Invalid start_date format (YYYY-MM-DD)")
 
-    # Skip to next weekday
-    while day1.weekday() in (4, 5):  # Fri=4, Sat=5
-        day1 += timedelta(days=1)
+    # Calculate how many days we need
+    slots_per_day = rules["slots_per_day"]
+    total_days_needed = math.ceil(len(subjects) / slots_per_day)
+    total_days = min(total_days_needed, rules["max_days"])
 
-    day2 = day1 + timedelta(days=1)
-    while day2.weekday() in (4, 5):
-        day2 += timedelta(days=1)
+    # Generate weekday dates
+    days = []
+    current = start
+    while len(days) < total_days:
+        while current.weekday() in (4, 5):  # Fri=4, Sat=5
+            current += timedelta(days=1)
+        days.append(current)
+        current += timedelta(days=1)
 
-    day3 = day2 + timedelta(days=1)
-    while day3.weekday() in (4, 5):
-        day3 += timedelta(days=1)
-
-    DAYS = [day1, day2, day3]
-
-    # Fixed 6 time slots: 45min exam + 15min gap
-    SLOTS = [
-        ("09:00", "09:45"),
-        ("10:00", "10:45"),
-        ("11:00", "11:45"),
-        ("12:00", "12:45"),
-        ("13:00", "13:45"),
-        ("14:00", "14:45"),
-    ]
+    SLOTS = rules["slots"]
 
     preview = []
     for idx, subj in enumerate(subjects):
-        slot_idx = idx % 6
-        day_offset = idx // 6
-        exam_date = DAYS[min(day_offset, 2)]
+        slot_idx = idx % slots_per_day
+        day_offset = idx // slots_per_day
+        if day_offset >= total_days:
+            break  # exceeded max days, skip remaining subjects
+        exam_date = days[day_offset]
 
         st = time.fromisoformat(SLOTS[slot_idx][0])
         et = time.fromisoformat(SLOTS[slot_idx][1])
@@ -402,15 +430,17 @@ def auto_generate_routine_preview(
             "group": group,
         })
 
-    total_days = 1 if len(subjects) <= 6 else (2 if len(subjects) <= 12 else 3)
     return {
         "exam_id": exam_id,
         "exam_name": exam.name,
+        "exam_type": exam.exam_type.value,
         "class_id": class_id,
         "class_name": cls.name,
         "group": group,
         "total_subjects": len(preview),
         "total_days": total_days,
+        "max_days": rules["max_days"],
+        "slots_per_day": slots_per_day,
         "time_slots": [{"slot": i + 1, "start": s[0], "end": s[1]} for i, s in enumerate(SLOTS)],
         "items": preview,
     }
@@ -422,9 +452,12 @@ def auto_generate_and_save(
     group: str | None = Query(None, description="SCIENCE, HUMANITIES, BUSINESS_STUDIES"),
     db: Session = Depends(get_db), user: User = Depends(get_current_user),
 ):
-    """Auto-generate and save exam routine: 45min exams, 15min gaps, 6 slots/day, up to 3 days.
+    """Auto-generate and save exam routine.
+    - Monthly: 45-min exams, 6/day, up to 3 days.
+    - Half-yearly/Final: 3-hour exams, 2/day (9-12, 13-16), up to 15 days.
     If group is provided, routine includes common + group-specific subjects."""
     from datetime import timedelta
+    import math
 
     exam = db.get(Exam, exam_id)
     if not exam:
@@ -432,6 +465,8 @@ def auto_generate_and_save(
     cls = db.get(SchoolClass, class_id)
     if not cls:
         raise HTTPException(404, "Class not found")
+
+    rules = _get_scheduling_rules(exam.exam_type.value)
 
     # Common subjects (all groups)
     common_subjects = cls.subjects
@@ -461,31 +496,23 @@ def auto_generate_and_save(
         raise HTTPException(400, "No subjects assigned to this class" + (f" for group {group}" if group else ""))
 
     try:
-        day1 = date.fromisoformat(start_date)
+        start = date.fromisoformat(start_date)
     except ValueError:
         raise HTTPException(400, "Invalid start_date format (YYYY-MM-DD)")
 
-    while day1.weekday() in (4, 5):
-        day1 += timedelta(days=1)
+    slots_per_day = rules["slots_per_day"]
+    total_days_needed = math.ceil(len(subjects) / slots_per_day)
+    total_days = min(total_days_needed, rules["max_days"])
 
-    day2 = day1 + timedelta(days=1)
-    while day2.weekday() in (4, 5):
-        day2 += timedelta(days=1)
+    days = []
+    current = start
+    while len(days) < total_days:
+        while current.weekday() in (4, 5):
+            current += timedelta(days=1)
+        days.append(current)
+        current += timedelta(days=1)
 
-    day3 = day2 + timedelta(days=1)
-    while day3.weekday() in (4, 5):
-        day3 += timedelta(days=1)
-
-    DAYS = [day1, day2, day3]
-
-    SLOTS = [
-        ("09:00", "09:45"),
-        ("10:00", "10:45"),
-        ("11:00", "11:45"),
-        ("12:00", "12:45"),
-        ("13:00", "13:45"),
-        ("14:00", "14:45"),
-    ]
+    SLOTS = rules["slots"]
 
     # Delete existing routines for this exam+class+group
     delete_filter = [
@@ -500,9 +527,11 @@ def auto_generate_and_save(
 
     created = []
     for idx, subj in enumerate(subjects):
-        slot_idx = idx % 6
-        day_offset = idx // 6
-        exam_date = DAYS[min(day_offset, 2)]
+        slot_idx = idx % slots_per_day
+        day_offset = idx // slots_per_day
+        if day_offset >= total_days:
+            break
+        exam_date = days[day_offset]
 
         st = time.fromisoformat(SLOTS[slot_idx][0])
         et = time.fromisoformat(SLOTS[slot_idx][1])
