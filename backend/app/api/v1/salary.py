@@ -21,11 +21,11 @@ router = APIRouter(prefix="/salary", tags=["salary"])
 
 # Designation-based salary amounts (TK)
 DESIGNATION_SALARIES = {
-    "HEAD TEACHER": 22000,
-    "SENIOR TEACHER": 20000,
-    "JUNIOR TEACHER": 16000,
+    "HEAD TEACHER": 20000,
+    "SENIOR TEACHER": 18000,
+    "JUNIOR TEACHER": 15000,
 }
-DEFAULT_SALARY = 16000
+DEFAULT_SALARY = 15000
 
 
 # ── Admin: Salary Structure ──────────────────────────────────────────────────
@@ -100,6 +100,15 @@ def auto_generate_structures(db: Session = Depends(get_db)):
 
     db.commit()
     return {"created": created, "updated": updated, "total_teachers": len(teachers)}
+
+
+@router.post("/clear-all", dependencies=[Depends(require_admin)])
+def clear_all_salary_data(db: Session = Depends(get_db)):
+    """Delete all salary structures and payments."""
+    db.query(SalaryPayment).delete()
+    db.query(SalaryStructure).delete()
+    db.commit()
+    return {"message": "All salary data cleared"}
 
 
 # ── Admin: Salary Payments ──────────────────────────────────────────────────
