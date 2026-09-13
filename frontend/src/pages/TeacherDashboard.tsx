@@ -205,7 +205,7 @@ export function TeacherDashboard() {
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
             <div>
               <p className="text-sm font-semibold text-slate-900">{["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][latestSalary.month]} {latestSalary.year}</p>
-              <p className="text-xs text-slate-500">৳{latestSalary.amount.toLocaleString()}</p>
+              <p className="text-xs text-slate-500">TK {latestSalary.amount.toLocaleString()}</p>
             </div>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${latestSalary.status === "PAID" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-amber-100 text-amber-700 border-amber-200"}`}>
               {latestSalary.status}

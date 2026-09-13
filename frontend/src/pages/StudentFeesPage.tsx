@@ -35,11 +35,11 @@ export function StudentFeesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Paid</p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">৳{totalPaid.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 mt-1">TK {totalPaid.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Due</p>
-          <p className="text-2xl font-extrabold text-red-600 mt-1">৳{totalDue.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-red-600 mt-1">TK {totalDue.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Unpaid Invoices</p>

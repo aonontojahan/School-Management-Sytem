@@ -247,7 +247,7 @@ export function StudentDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
               <p className="text-xs font-semibold text-emerald-600">Total Pending</p>
-              <p className="text-2xl font-extrabold text-emerald-700 mt-1">৳{feeData.total_pending.toLocaleString()}</p>
+              <p className="text-2xl font-extrabold text-emerald-700 mt-1">TK {feeData.total_pending.toLocaleString()}</p>
             </div>
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
               <p className="text-xs font-semibold text-slate-600">Total Invoices</p>

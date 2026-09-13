@@ -41,7 +41,7 @@ function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
         {yTicks.map((tick, i) => (
           <g key={i}>
             <line x1={padding.left} y1={toY(tick)} x2={width - padding.right} y2={toY(tick)} stroke="#e2e8f0" strokeDasharray="4 4" />
-            <text x={padding.left - 8} y={toY(tick) + 4} textAnchor="end" className="fill-slate-400 text-[10px]">৳{tick.toLocaleString()}</text>
+            <text x={padding.left - 8} y={toY(tick) + 4} textAnchor="end" className="fill-slate-400 text-[10px]">TK {tick.toLocaleString()}</text>
           </g>
         ))}
         {data.map((d, i) => (
@@ -88,7 +88,7 @@ function YearlyBarChart({ data }: { data: YearlyRevenue[] }) {
         {[0, 0.25, 0.5, 0.75, 1].map((p) => (
           <g key={p}>
             <line x1={padding.left} y1={toY(maxVal * p)} x2={width - padding.right} y2={toY(maxVal * p)} stroke="#e2e8f0" strokeDasharray="4 4" />
-            <text x={padding.left - 8} y={toY(maxVal * p) + 4} textAnchor="end" className="fill-slate-400 text-[10px]">৳{Math.round(maxVal * p).toLocaleString()}</text>
+            <text x={padding.left - 8} y={toY(maxVal * p) + 4} textAnchor="end" className="fill-slate-400 text-[10px]">TK {Math.round(maxVal * p).toLocaleString()}</text>
           </g>
         ))}
         {data.map((d, i) => {
@@ -142,15 +142,15 @@ export function AdminReportsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs font-semibold text-slate-500">Fee Collected ({summary.month_name})</p>
-            <p className="text-2xl font-extrabold text-emerald-600 mt-1">৳{summary.fee_collected.toLocaleString()}</p>
+            <p className="text-2xl font-extrabold text-emerald-600 mt-1">TK {summary.fee_collected.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs font-semibold text-slate-500">Salary Paid ({summary.month_name})</p>
-            <p className="text-2xl font-extrabold text-red-500 mt-1">৳{summary.salary_paid.toLocaleString()}</p>
+            <p className="text-2xl font-extrabold text-red-500 mt-1">TK {summary.salary_paid.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs font-semibold text-slate-500">Net Revenue ({summary.month_name})</p>
-            <p className={`text-2xl font-extrabold mt-1 ${summary.revenue >= 0 ? "text-indigo-600" : "text-red-600"}`}>৳{summary.revenue.toLocaleString()}</p>
+            <p className={`text-2xl font-extrabold mt-1 ${summary.revenue >= 0 ? "text-indigo-600" : "text-red-600"}`}>TK {summary.revenue.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 p-4">
             <p className="text-xs font-semibold text-slate-500">Pending Fees</p>
@@ -167,16 +167,16 @@ export function AdminReportsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Fees Collected (All Time)</p>
-          <p className="text-2xl font-extrabold text-emerald-600 mt-1">৳{totalFee.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-emerald-600 mt-1">TK {totalFee.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Total Salary Paid (All Time)</p>
-          <p className="text-2xl font-extrabold text-red-500 mt-1">৳{totalSalary.toLocaleString()}</p>
+          <p className="text-2xl font-extrabold text-red-500 mt-1">TK {totalSalary.toLocaleString()}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-semibold text-slate-500">Net Revenue (All Time)</p>
           <p className={`text-2xl font-extrabold mt-1 ${totalFee - totalSalary >= 0 ? "text-indigo-600" : "text-red-600"}`}>
-            ৳{(totalFee - totalSalary).toLocaleString()}
+            TK {(totalFee - totalSalary).toLocaleString()}
           </p>
         </div>
       </div>
