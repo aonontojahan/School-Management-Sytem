@@ -15,6 +15,7 @@ import { StudentSchedulePage } from "./pages/StudentSchedulePage";
 import { AdminSubjectPage } from "./pages/admin/AdminSubjectPage";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { TeacherAttendance } from "./pages/TeacherAttendance";
+import { StudentAttendancePage } from "./pages/StudentAttendancePage";
 import { TeacherAssignments } from "./pages/TeacherAssignments";
 import { StudentAssignments } from "./pages/StudentAssignments";
 import { AdminExamPage } from "./pages/admin/AdminExamPage";
@@ -70,6 +71,7 @@ function AttendanceRouter() {
   const { role } = useAuth();
   if (role === "ADMIN") return <AdminAttendancePage />;
   if (role === "TEACHER") return <TeacherAttendance />;
+  if (role === "STUDENT") return <StudentAttendancePage />;
   return <TeacherAttendance />;
 }
 
