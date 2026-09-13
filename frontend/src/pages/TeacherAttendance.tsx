@@ -192,7 +192,12 @@ export function TeacherAttendance() {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold">Take Attendance</h1>
-            <p className="text-emerald-100 text-sm mt-0.5">Select your class, period, and mark student attendance</p>
+            <div className="inline-flex items-center gap-1.5 mt-1.5 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+              <svg className="w-3.5 h-3.5 text-emerald-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-emerald-50 text-xs font-semibold">Select your class, period, and mark student attendance</p>
+            </div>
           </div>
         </div>
       </div>
@@ -214,26 +219,18 @@ export function TeacherAttendance() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">Class *</label>
-              <select
-                value={selectedClassSection}
-                onChange={e => { setSelectedClassSection(e.target.value); setStatuses({}); }}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
-              >
+              <select value={selectedClassSection} onChange={e => { setSelectedClassSection(e.target.value); setStatuses({}); }}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                 <option value="">Select a class...</option>
                 {classSectionOptions.map(o => (
-                  <option key={`${o.classId}|${o.sectionId}`} value={`${o.classId}|${o.sectionId}`}>
-                    {o.class_name} — {o.section_name}
-                  </option>
+                  <option key={`${o.classId}|${o.sectionId}`} value={`${o.classId}|${o.sectionId}`}>{o.class_name} — {o.section_name}</option>
                 ))}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">Period *</label>
-              <select
-                value={selectedPeriod ?? ""}
-                onChange={e => setSelectedPeriod(Number(e.target.value) || null)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
-              >
+              <select value={selectedPeriod ?? ""} onChange={e => setSelectedPeriod(Number(e.target.value) || null)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                 <option value="">Select a period...</option>
                 {periods?.map(p => (
                   <option key={p.id} value={p.id}>{p.label} ({p.start_time?.slice(0, 5)} – {p.end_time?.slice(0, 5)})</option>
@@ -242,12 +239,8 @@ export function TeacherAttendance() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5">Date *</label>
-              <input
-                type="date"
-                value={date}
-                onChange={e => setDate(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
-              />
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" />
             </div>
           </div>
         </div>
@@ -255,136 +248,112 @@ export function TeacherAttendance() {
 
       {/* Today's Routine */}
       {selectedClassSection && todayRoutines.length > 0 && (
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Today's Schedule</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {todayRoutines.map(r => (
-              <div key={r.id} className="flex items-center gap-2 bg-white/80 rounded-lg px-3 py-1.5 border border-indigo-100">
-                <span className="text-xs font-semibold text-indigo-600">{r.period_label}</span>
-                <span className="text-xs text-slate-400">|</span>
-                <span className="text-xs font-medium text-slate-700">{r.subject_name}</span>
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-            ))}
+              <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide">Today's Schedule</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="flex flex-wrap gap-2">
+              {todayRoutines.map(r => (
+                <div key={r.id} className="flex items-center gap-2 bg-indigo-50 rounded-xl px-4 py-2 border border-indigo-100">
+                  <span className="text-xs font-bold text-indigo-600">{r.period_label}</span>
+                  <span className="w-px h-3 bg-indigo-200" />
+                  <span className="text-sm font-medium text-slate-700">{r.subject_name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
       {selectedClassSection && todayRoutines.length === 0 && (
-        <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-            <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-amber-800">No routine today</p>
-            <p className="text-xs text-amber-600">You have no classes scheduled for today in this section</p>
+        <div className="bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden">
+          <div className="p-5 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+              <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-800">No routine today</p>
+              <p className="text-xs text-amber-600">You have no classes scheduled for today in this section</p>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Stats Cards */}
+      {/* Stats Summary Card */}
       {selectedOption && students && students.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="relative bg-white rounded-2xl border border-slate-200 p-5 overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-slate-50 rounded-bl-[40px] -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</p>
-              </div>
-              <p className="text-2xl font-extrabold text-slate-900">{students.length}</p>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl border border-slate-200 p-5 overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-50 rounded-bl-[40px] -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Present</p>
-              </div>
-              <p className="text-2xl font-extrabold text-emerald-600">{presentCount}</p>
-            </div>
-          </div>
-          <div className="relative bg-white rounded-2xl border border-slate-200 p-5 overflow-hidden group hover:shadow-md transition-shadow">
-            <div className="absolute top-0 right-0 w-20 h-20 bg-red-50 rounded-bl-[40px] -z-0" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Absent</p>
-              </div>
-              <p className="text-2xl font-extrabold text-red-600">{absentCount}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Student List */}
-      {selectedOption ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900">
+                    {selectedOption.class_name} — {selectedOption.section_name}
+                    {hasExisting && <span className="ml-2 text-xs font-normal text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Previously marked</span>}
+                  </h2>
+                  <p className="text-xs text-slate-500">{students.length} students enrolled</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  Students{students ? ` (${students.length})` : ""}
-                  {hasExisting && <span className="ml-2 text-xs font-normal text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Previously marked</span>}
-                </h2>
-                <p className="text-xs text-slate-500">Mark attendance for each student</p>
-              </div>
-            </div>
-            {students && students.length > 0 && (
               <div className="flex gap-2">
-                <button
-                  onClick={() => toggleAll("PRESENT")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition"
-                >
+                <button onClick={() => toggleAll("PRESENT")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-semibold hover:bg-emerald-200 transition">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                   All Present
                 </button>
-                <button
-                  onClick={() => toggleAll("ABSENT")}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-semibold hover:bg-red-100 transition"
-                >
+                <button onClick={() => toggleAll("ABSENT")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 text-red-700 text-xs font-semibold hover:bg-red-200 transition">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   All Absent
                 </button>
               </div>
-            )}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 divide-x divide-slate-100">
+            <div className="px-6 py-4 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Total</p>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{students.length}</p>
+            </div>
+            <div className="px-6 py-4 text-center">
+              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide">Present</p>
+              <p className="text-2xl font-extrabold text-emerald-600 mt-1">{presentCount}</p>
+            </div>
+            <div className="px-6 py-4 text-center">
+              <p className="text-[10px] font-bold text-red-400 uppercase tracking-wide">Absent</p>
+              <p className="text-2xl font-extrabold text-red-600 mt-1">{absentCount}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Cards */}
+      {selectedOption ? (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="text-sm font-bold text-slate-900">Student Attendance{students ? ` (${students.length})` : ""}</h3>
+            <p className="text-xs text-slate-500">Tap a student card to toggle between Present and Absent</p>
           </div>
 
           <div className="p-6">
             {studentsLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse" />
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => <div key={i} className="h-32 bg-slate-50 rounded-2xl animate-pulse" />)}
               </div>
             ) : !students || students.length === 0 ? (
               <div className="text-center py-12">
@@ -397,60 +366,60 @@ export function TeacherAttendance() {
                 <p className="text-xs text-slate-500">No students enrolled in this class/section</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="text-left px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
-                      <th className="text-left px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                      <th className="text-left px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Code</th>
-                      <th className="text-center px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider w-40">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {students.map((student, idx) => (
-                      <tr key={student.id} className="group hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-3.5 text-xs text-slate-400 font-medium">{idx + 1}</td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                              {`${student.first_name[0]}${student.last_name[0]}`.toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900">{student.first_name} {student.last_name}</p>
-                              {student.roll_number && <p className="text-[11px] text-slate-400">Roll: {student.roll_number}</p>}
-                            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {students.map((student) => {
+                  const isPresent = statuses[student.id] === "PRESENT";
+                  return (
+                    <div key={student.id} onClick={() => setStatuses(prev => ({ ...prev, [student.id]: isPresent ? "ABSENT" : "PRESENT" }))}
+                      className={`relative rounded-2xl border-2 p-5 cursor-pointer transition-all duration-200 overflow-hidden group ${
+                        isPresent
+                          ? "border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 hover:border-emerald-400 hover:shadow-md hover:shadow-emerald-100"
+                          : "border-red-200 bg-gradient-to-br from-red-50 to-rose-50 hover:border-red-400 hover:shadow-md hover:shadow-red-100"
+                      }`}>
+                      {/* Corner badge */}
+                      <div className={`absolute top-0 right-0 w-20 h-20 rounded-bl-[40px] ${isPresent ? "bg-emerald-100/60" : "bg-red-100/60"}`} />
+
+                      <div className="relative z-10">
+                        {/* Avatar + Name */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-sm ${
+                            isPresent ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gradient-to-br from-red-500 to-rose-500"
+                          }`}>
+                            {`${student.first_name[0]}${student.last_name[0]}`.toUpperCase()}
                           </div>
-                        </td>
-                        <td className="px-6 py-3.5 text-xs text-slate-500">{student.student_code}</td>
-                        <td className="px-6 py-3.5">
-                          <div className="flex items-center justify-center gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer group/present">
-                              <input
-                                type="radio"
-                                name={`student-${student.id}`}
-                                checked={statuses[student.id] === "PRESENT"}
-                                onChange={() => setStatuses(prev => ({ ...prev, [student.id]: "PRESENT" }))}
-                                className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300"
-                              />
-                              <span className="text-xs font-semibold text-emerald-700 group-hover/present:text-emerald-900">Present</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer group/absent">
-                              <input
-                                type="radio"
-                                name={`student-${student.id}`}
-                                checked={statuses[student.id] === "ABSENT"}
-                                onChange={() => setStatuses(prev => ({ ...prev, [student.id]: "ABSENT" }))}
-                                className="w-4 h-4 text-red-600 focus:ring-red-500 border-slate-300"
-                              />
-                              <span className="text-xs font-semibold text-red-700 group-hover/absent:text-red-900">Absent</span>
-                            </label>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-slate-900 truncate">{student.first_name} {student.last_name}</p>
+                            <p className="text-[11px] text-slate-500">{student.student_code}</p>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+
+                        {/* Roll */}
+                        {student.roll_number && (
+                          <div className="flex items-center gap-1.5 mb-3">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Roll</span>
+                            <span className="text-xs font-bold text-slate-700">#{student.roll_number}</span>
+                          </div>
+                        )}
+
+                        {/* Status badge */}
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${
+                          isPresent ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                        }`}>
+                          {isPresent ? (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {isPresent ? "Present" : "Absent"}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -459,7 +428,7 @@ export function TeacherAttendance() {
           {students && students.length > 0 && (
             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5 text-xs text-slate-500">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />{presentCount} present
                   </div>
@@ -467,11 +436,9 @@ export function TeacherAttendance() {
                     <span className="w-2 h-2 rounded-full bg-red-500" />{absentCount} absent
                   </div>
                 </div>
-                <button
-                  onClick={handleSubmit}
+                <button onClick={handleSubmit}
                   disabled={!selectedPeriod || submitMutation.isPending}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm shadow-emerald-200"
-                >
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm shadow-emerald-200">
                   {submitMutation.isPending ? (
                     <>
                       <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -500,7 +467,7 @@ export function TeacherAttendance() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
           <p className="text-sm font-semibold text-slate-900 mb-1">Select a class above</p>

@@ -11,6 +11,7 @@ import { StudentManagement } from "./pages/admin/StudentManagement";
 import { TeacherManagement } from "./pages/admin/TeacherManagement";
 import { AdminRoutinePage } from "./pages/admin/AdminRoutinePage";
 import { TeacherSchedulePage } from "./pages/TeacherSchedulePage";
+import { StudentSchedulePage } from "./pages/StudentSchedulePage";
 import { AdminSubjectPage } from "./pages/admin/AdminSubjectPage";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { TeacherAttendance } from "./pages/TeacherAttendance";
@@ -22,10 +23,13 @@ import { AdminFeesPage } from "./pages/admin/AdminFeesPage";
 import { AdminSalaryPage } from "./pages/admin/AdminSalaryPage";
 import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
 import { AdminResultsPage } from "./pages/admin/AdminResultsPage";
+import { AdminAttendancePage } from "./pages/admin/AdminAttendancePage";
 import { StudentExamsPage } from "./pages/StudentExamsPage";
 import { StudentExamRoutinePage } from "./pages/StudentExamRoutinePage";
 import { StudentFeesPage } from "./pages/StudentFeesPage";
 import { StudentResultsPage } from "./pages/StudentResultsPage";
+import { StudentNoticePage } from "./pages/StudentNoticePage";
+import { StudentProfilePage } from "./pages/StudentProfilePage";
 import { TeacherExamRoutinePage } from "./pages/TeacherExamRoutinePage";
 import { TeacherSalaryPage } from "./pages/TeacherSalaryPage";
 import { TeacherMarksEntryPage } from "./pages/TeacherMarksEntryPage";
@@ -41,7 +45,7 @@ import {
 function RoutineRouter() {
   const { role } = useAuth();
   if (role === "TEACHER") return <TeacherSchedulePage />;
-  if (role === "STUDENT") return <TeacherSchedulePage />;
+  if (role === "STUDENT") return <StudentSchedulePage />;
   return <AdminRoutinePage />;
 }
 
@@ -64,8 +68,9 @@ function HomeRouter() {
 
 function AttendanceRouter() {
   const { role } = useAuth();
+  if (role === "ADMIN") return <AdminAttendancePage />;
   if (role === "TEACHER") return <TeacherAttendance />;
-  return <AttendancePage />;
+  return <TeacherAttendance />;
 }
 
 function AssignmentsRouter() {
@@ -130,6 +135,8 @@ export default function App() {
         <Route path="/salary" element={<Shelled roles={["ADMIN", "TEACHER"]}><SalaryRouter /></Shelled>} />
         <Route path="/reports" element={<Shelled roles={["ADMIN"]}><AdminReportsPage /></Shelled>} />
         <Route path="/assignments" element={<Shelled><AssignmentsRouter /></Shelled>} />
+        <Route path="/notice" element={<Shelled roles={["STUDENT"]}><StudentNoticePage /></Shelled>} />
+        <Route path="/my-profile" element={<Shelled roles={["STUDENT"]}><StudentProfilePage /></Shelled>} />
         <Route path="/profile" element={<Shelled roles={["STUDENT"]}><ProfilePage /></Shelled>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

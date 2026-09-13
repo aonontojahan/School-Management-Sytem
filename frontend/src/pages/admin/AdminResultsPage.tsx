@@ -109,7 +109,12 @@ export function AdminResultsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold">Results</h1>
-            <p className="text-purple-100 text-sm mt-0.5">View student results by class, section, exam, and roll number</p>
+            <div className="inline-flex items-center gap-1.5 mt-1.5 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1">
+              <svg className="w-3.5 h-3.5 text-purple-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-purple-50 text-xs font-semibold">View student results by class, section, exam, and roll number</p>
+            </div>
           </div>
         </div>
       </div>
