@@ -142,16 +142,17 @@ const ROLES = [
 ];
 
 const STATS = [
-  { value: "5", label: "Classes (5–9)" },
-  { value: "4", label: "User Roles" },
-  { value: "100%", label: "Automated" },
-  { value: "24/7", label: "Access" },
+  { value: "500+", label: "Students" },
+  { value: "30+", label: "Expert Teachers" },
+  { value: "95%", label: "Pass Rate" },
+  { value: "20+", label: "Years Legacy" },
 ];
 
 const NAV_LINKS = [
   { label: "Home", href: "#home" },
   { label: "Features", href: "#features" },
   { label: "About", href: "#about" },
+  { label: "Admission", href: "#admission" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -214,7 +215,9 @@ export function LandingPage() {
       {/* ── Navbar ───────────────────────────────────────────────────────── */}
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrollY > 20 ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100" : "bg-transparent"
+          scrollY > 20
+            ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100"
+            : "bg-slate-950/80 backdrop-blur-md border-b border-white/10"
         }`}
       >
         <div className="w-full px-6 sm:px-10 lg:px-14">
@@ -224,53 +227,58 @@ export function LandingPage() {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-md shadow-indigo-200">
                 S
               </div>
-              <span className="font-extrabold text-slate-900 text-[15px] hidden sm:block">School Management System</span>
+              <span className={`font-extrabold text-[15px] hidden sm:block ${scrollY > 20 ? "text-slate-900" : "text-white"}`}>School Management System</span>
             </Link>
 
-            {/* Center Nav (hidden on small screens) */}
-            <div className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-              {NAV_LINKS.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
+            {/* Right side — Nav + Login */}
+            <div className="flex items-center gap-1">
+              {/* Nav Links */}
+              <div className="hidden lg:flex items-center gap-1">
+                {NAV_LINKS.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      scrollY > 20
+                        ? "text-slate-600 hover:text-indigo-600 hover:bg-indigo-50"
+                        : "text-white/80 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
 
-            {/* CTA — Right */}
-            <div className="flex items-center gap-3">
+              {/* Divider */}
+              <div className={`hidden lg:block w-px h-6 mx-2 ${scrollY > 20 ? "bg-slate-200" : "bg-white/20"}`} />
+
+              {/* Login Button */}
+              <Link
+                to="/login"
+                className={`hidden lg:inline-flex px-5 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+                  scrollY > 20
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200"
+                    : "bg-white text-slate-900 hover:bg-white/90 shadow-lg shadow-black/20"
+                }`}
+              >
+                Login
+              </Link>
+
               {/* Mobile hamburger */}
               <button
-                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition"
+                className={`lg:hidden p-2 rounded-lg transition ${scrollY > 20 ? "hover:bg-slate-100" : "hover:bg-white/10"}`}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? (
-                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className={`w-5 h-5 ${scrollY > 20 ? "text-slate-600" : "text-white"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className={`w-5 h-5 ${scrollY > 20 ? "text-slate-600" : "text-white"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 )}
               </button>
-
-              {/* Desktop buttons */}
-              <Link
-                to="/login"
-                className="hidden lg:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 transition"
-              >
-                Login
-              </Link>
-              <Link
-                to="/login"
-                className="hidden lg:inline-flex px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-indigo-200 hover:shadow-md hover:shadow-indigo-300 transition-all duration-200"
-              >
-                Get Started
-              </Link>
             </div>
           </div>
         </div>
@@ -289,20 +297,13 @@ export function LandingPage() {
                   {link.label}
                 </a>
               ))}
-              <div className="pt-3 mt-3 border-t border-slate-100 flex flex-col gap-2">
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition"
-                >
-                  Login
-                </Link>
+              <div className="pt-3 mt-3 border-t border-slate-100">
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition"
                 >
-                  Get Started
+                  Login
                 </Link>
               </div>
             </div>
@@ -311,25 +312,26 @@ export function LandingPage() {
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section id="home" className="relative min-h-[92vh] flex items-center overflow-hidden">
+      <section id="home" className="relative min-h-[92vh] flex items-center overflow-hidden isolate">
         {/* Video Background */}
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-[-1] bg-slate-950">
           <video
             autoPlay
             loop
             muted
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
-            poster="/images/hero/school-building.jpg"
-          >
-            <source src="/video/hero.mp4" type="video/mp4" />
-          </video>
-          {/* Dark overlay with gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/50 via-slate-900/40 to-purple-950/50" />
-          {/* Animated mesh gradient blobs */}
-          <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "2s" }} />
+            src="/video/hero.mp4"
+          />
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/60 via-slate-900/50 to-purple-950/60" />
+          {/* Animated gradient mesh */}
+          <div className="absolute inset-0 animate-gradient-1 bg-[radial-gradient(ellipse_at_20%_50%,rgba(99,102,241,0.3),transparent_60%)]" />
+          <div className="absolute inset-0 animate-gradient-2 bg-[radial-gradient(ellipse_at_80%_20%,rgba(139,92,246,0.25),transparent_60%)]" />
+          <div className="absolute inset-0 animate-gradient-3 bg-[radial-gradient(ellipse_at_60%_80%,rgba(59,130,246,0.2),transparent_60%)]" />
+          {/* Floating orbs */}
+          <div className="absolute top-[15%] left-[10%] w-80 h-80 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-[10%] right-[15%] w-96 h-96 bg-purple-500/15 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
         </div>
 
         <div className="w-full px-6 sm:px-10 lg:px-14 py-20">
@@ -337,39 +339,38 @@ export function LandingPage() {
             {/* Left — Text Content */}
             <div className="text-left">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 rounded-full mb-8">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-semibold text-white/90">Trusted by 500+ Students</span>
+                <span className="text-xs font-semibold text-emerald-300">Admission Open 2027</span>
               </div>
 
               {/* Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
-                One platform for the{" "}
+                Nurturing Minds,{" "}
                 <span className="bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  whole school
+                  Building Futures
                 </span>
               </h1>
 
               {/* Subheadline */}
               <p className="mt-6 text-lg sm:text-xl text-white/70 max-w-lg leading-relaxed">
-                Manage attendance, exams, fees, salaries, and assignments — all in one place.
-                Built for administrators, teachers, students, and guardians.
+                Empowering students from Class 5 to 9 with quality education, modern facilities, and a nurturing environment since 2005.
               </p>
 
               {/* CTA buttons */}
               <div className="mt-10 flex flex-col sm:flex-row items-start gap-4">
-                <Link
-                  to="/login"
-                  className="group px-8 py-4 bg-white text-indigo-700 font-bold rounded-2xl shadow-2xl shadow-black/20 hover:shadow-white/20 transition-all duration-300 text-center flex items-center gap-2 hover:scale-105"
+                <a
+                  href="#admission"
+                  className="group px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-2xl shadow-emerald-900/30 hover:shadow-emerald-500/30 transition-all duration-300 text-center flex items-center gap-2 hover:scale-105"
                 >
-                  Get Started Free
+                  Apply for Admission 2027
                   <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </a>
                 <a
                   href="#features"
                   className="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/20 transition-all duration-300 text-center"
                 >
-                  Explore Features
+                  Explore Campus
                 </a>
               </div>
 
@@ -705,6 +706,119 @@ export function LandingPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Admission 2027 ──────────────────────────────────────────────────── */}
+      <section id="admission" className="py-20 sm:py-28 bg-gradient-to-br from-emerald-50 via-white to-blue-50">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
+          <SectionHeader
+            badge="Admission 2027"
+            title="Join Our School Family"
+            desc="Applications are now open for the 2027 academic session. Secure your child's future with quality education."
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Important Dates */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Important Dates</h3>
+              <div className="space-y-4">
+                {[
+                  { date: "Nov 1, 2026", label: "Applications Open" },
+                  { date: "Jan 15, 2027", label: "Application Deadline" },
+                  { date: "Feb 10, 2027", label: "Entrance Exam" },
+                  { date: "Feb 28, 2027", label: "Results Announced" },
+                  { date: "Mar 15, 2027", label: "Session Begins" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{item.date}</p>
+                      <p className="text-xs text-slate-500">{item.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* How to Apply */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">How to Apply</h3>
+              <div className="space-y-4">
+                {[
+                  { step: "01", title: "Collect Form", desc: "Visit the school office or download the admission form from our website" },
+                  { step: "02", title: "Submit Documents", desc: "Submit birth certificate, previous report card, and passport photos" },
+                  { step: "03", title: "Entrance Exam", desc: "Student appears for the entrance exam in English, Math, and Science" },
+                  { step: "04", title: "Interview", desc: "Parent and student interview with the admission committee" },
+                  { step: "05", title: "Enrollment", desc: "Receive offer letter and complete fee payment to confirm seat" },
+                ].map((item) => (
+                  <div key={item.step} className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      {item.step}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                      <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Requirements & Fees */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-lg transition-shadow">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-5">
+                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Requirements & Fees</h3>
+              <div className="space-y-4">
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Eligibility</p>
+                  <ul className="space-y-2">
+                    {["Class 5: Age 10+ by March 2027", "Class 6: Age 11+ by March 2027", "Class 7: Age 12+ by March 2027", "Class 8: Age 13+ by March 2027", "Class 9: Age 14+ by March 2027"].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-slate-700">
+                        <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Required Documents</p>
+                  <ul className="space-y-2">
+                    {["Birth Certificate", "Previous Report Card", "4 Passport Photos", "Guardian NID Copy", "Transfer Certificate"].map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-slate-700">
+                        <svg className="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <a
+                href="#contact"
+                className="mt-6 block w-full text-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm shadow-emerald-200 transition-all duration-200"
+              >
+                Contact for Details
+              </a>
             </div>
           </div>
         </div>
