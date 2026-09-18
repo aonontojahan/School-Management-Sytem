@@ -223,16 +223,22 @@ export function AdminDashboard() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => (await api.get("/dashboard/admin/stats")).data as AdminStats,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: monthlyData = [] } = useQuery({
     queryKey: ["monthly-attendance"],
     queryFn: async () => (await api.get("/dashboard/monthly-attendance")).data as MonthlyData[],
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: classData = [] } = useQuery({
     queryKey: ["class-attendance"],
     queryFn: async () => (await api.get("/dashboard/class-attendance")).data as ClassAttendance[],
+    refetchInterval: 30000,
+    refetchOnWindowFocus: true,
   });
 
   if (isLoading) {

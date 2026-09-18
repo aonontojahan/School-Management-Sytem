@@ -233,7 +233,7 @@ export function TeacherAttendance() {
                 className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
                 <option value="">Select a period...</option>
                 {periods?.map(p => (
-                  <option key={p.id} value={p.id}>{p.label} ({p.start_time?.slice(0, 5)} – {p.end_time?.slice(0, 5)})</option>
+                  <option key={p.id} value={p.number}>{p.label} ({p.start_time?.slice(0, 5)} – {p.end_time?.slice(0, 5)})</option>
                 ))}
               </select>
             </div>

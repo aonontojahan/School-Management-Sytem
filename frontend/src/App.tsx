@@ -63,7 +63,7 @@ function HomeRouter() {
   if (!role) return <LandingPage />;
   if (role === "ADMIN") return <Navigate to="/admin/dashboard" replace />;
   if (role === "STUDENT") return <Navigate to="/student/dashboard" replace />;
-  if (role === "TEACHER") return <TeacherDashboard />;
+  if (role === "TEACHER") return <Navigate to="/teacher/dashboard" replace />;
   return <Dashboard />;
 }
 
@@ -124,6 +124,7 @@ export default function App() {
         <Route path="/search" element={<Shelled><SearchPage /></Shelled>} />
         <Route path="/admin/dashboard" element={<Shelled roles={["ADMIN"]}><AdminDashboard /></Shelled>} />
         <Route path="/student/dashboard" element={<Shelled roles={["STUDENT"]}><StudentDashboard /></Shelled>} />
+        <Route path="/teacher/dashboard" element={<Shelled roles={["TEACHER"]}><TeacherDashboard /></Shelled>} />
         <Route path="/students" element={<Shelled roles={["ADMIN"]}><StudentManagement /></Shelled>} />
         <Route path="/teachers" element={<Shelled roles={["ADMIN"]}><TeacherManagement /></Shelled>} />
         <Route path="/routines" element={<Shelled roles={["ADMIN", "TEACHER", "STUDENT"]}><RoutineRouter /></Shelled>} />
