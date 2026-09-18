@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { useToast } from "../components/ui/Toast";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
 interface RoutineEntry {
   day: string;
@@ -57,11 +60,13 @@ function getAssignmentStatus(dueDate: string): { label: string; color: string } 
 
 export function TeacherAssignments() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [selectedLabel, setSelectedLabel] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const { data: routines, isLoading: routinesLoading } = useQuery({
     queryKey: ["teacher-routine"],
@@ -107,6 +112,10 @@ export function TeacherAssignments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
       resetForm();
+      showToast("Assignment created successfully");
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) => {
+      showToast(e.response?.data?.detail || "Failed to create assignment", "error");
     },
   });
 
@@ -114,6 +123,10 @@ export function TeacherAssignments() {
     mutationFn: async (id: number) => api.delete(`/assignments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      showToast("Assignment deleted successfully");
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) => {
+      showToast(e.response?.data?.detail || "Failed to delete assignment", "error");
     },
   });
 
@@ -138,9 +151,7 @@ export function TeacherAssignments() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this assignment?")) {
-      deleteMutation.mutate(id);
-    }
+    setDeleteConfirmId(id);
   };
 
   if (routinesLoading) {
@@ -265,9 +276,19 @@ export function TeacherAssignments() {
             ))}
           </div>
         ) : !assignments || assignments.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">
-            No assignments yet. Click "+ New Assignment" to create one.
-          </p>
+          <EmptyState
+            icon="📝"
+            title="No assignments yet"
+            description="Click '+ New Assignment' to create one."
+            action={
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition"
+              >
+                + Create Assignment
+              </button>
+            }
+          />
         ) : (
           <div className="space-y-3">
             {assignments.map((a) => {
@@ -309,6 +330,21 @@ export function TeacherAssignments() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => {
+          if (deleteConfirmId !== null) {
+            deleteMutation.mutate(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        title="Delete Assignment"
+        message="Are you sure you want to delete this assignment? This action cannot be undone."
+        confirmLabel="Delete Assignment"
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

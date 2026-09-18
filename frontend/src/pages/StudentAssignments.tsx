@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useToast } from "../components/ui/Toast";
+import { EmptyState } from "../components/ui/EmptyState";
 
 interface StudentAssignment {
   id: number;
@@ -94,10 +95,11 @@ export function StudentAssignments() {
       {isLoading ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-slate-500 animate-pulse">Loading assignments…</div>
       ) : !assignments || assignments.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
-          <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-2xl mb-4">📝</div>
-          <p className="text-slate-500">No assignments yet</p>
-        </div>
+        <EmptyState
+          icon="📝"
+          title="No assignments yet"
+          description="Assignments from your teachers will appear here."
+        />
       ) : (
         <div className="space-y-3">
           {assignments.map(a => {

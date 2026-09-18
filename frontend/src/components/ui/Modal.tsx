@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 interface ModalProps {
   open: boolean;
@@ -9,12 +9,34 @@ interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, wide }: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEscape);
+    // Auto-focus first focusable element
+    const timer = setTimeout(() => {
+      const firstInput = dialogRef.current?.querySelector<HTMLElement>(
+        "input:not([type='hidden']), select, textarea"
+      );
+      firstInput?.focus();
+    }, 100);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      clearTimeout(timer);
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div
+        ref={dialogRef}
         className={`relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full ${
           wide ? "max-w-2xl" : "max-w-lg"
         } max-h-[90vh] flex flex-col`}

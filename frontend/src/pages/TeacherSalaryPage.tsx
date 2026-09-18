@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { EmptyState } from "../components/ui/EmptyState";
 
 const MONTHS = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const STATUS_COLORS: Record<string, string> = {
@@ -52,7 +53,11 @@ export function TeacherSalaryPage() {
         {isLoading ? (
           <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse" />)}</div>
         ) : !data?.payments || data.payments.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">No salary records yet. Salary will appear once the admin sets up your salary structure.</p>
+          <EmptyState
+            icon="💰"
+            title="No salary records yet"
+            description="Salary will appear once the admin sets up your salary structure."
+          />
         ) : (
           <div className="space-y-3">
             {data.payments.map(p => (

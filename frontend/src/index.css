@@ -16,3 +16,36 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+/* Print styles for report cards and fee receipts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px;
+    background: white;
+  }
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+  .print-break {
+    page-break-before: always;
+  }
+  header, nav, aside, .sidebar {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

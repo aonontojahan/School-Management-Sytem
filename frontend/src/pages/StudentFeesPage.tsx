@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { EmptyState } from "../components/ui/EmptyState";
 
 interface Invoice {
   id: number; fee_type_name: string | null; total_amount: number; paid_amount: number;
@@ -53,7 +54,11 @@ export function StudentFeesPage() {
         {isLoading ? (
           <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-slate-50 rounded-xl animate-pulse" />)}</div>
         ) : !invoices || invoices.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">No fee invoices yet.</p>
+          <EmptyState
+            icon="📄"
+            title="No fee invoices yet"
+            description="Your fee invoices will appear here once the admin creates them."
+          />
         ) : (
           <div className="space-y-3">
             {invoices.map(inv => (

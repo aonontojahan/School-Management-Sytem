@@ -442,8 +442,21 @@ export function TeacherManagement() {
       </div>
 
       {isLoading ? (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-slate-500 animate-pulse">
-          Loading teachers…
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-6 space-y-4">
+            <div className="flex gap-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse flex-1" />
+              ))}
+            </div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex gap-4">
+                {[...Array(5)].map((_, j) => (
+                  <div key={j} className="h-12 bg-slate-50 rounded-lg animate-pulse flex-1" />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       ) : isError ? (
         <div className="bg-white rounded-2xl border border-red-200 shadow-sm p-8">

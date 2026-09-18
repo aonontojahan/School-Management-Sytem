@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
+import { EmptyState } from "../../components/ui/EmptyState";
 
 interface Exam { id: number; name: string; exam_type: string; total_marks: number; passing_marks: number; }
 interface SchoolClass { id: number; name: string; code: string; }
@@ -222,15 +223,11 @@ export function AdminResultsPage() {
               {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse" />)}
             </div>
           ) : !results || results.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <p className="text-sm font-semibold text-slate-900 mb-1">No results found</p>
-              <p className="text-xs text-slate-500">Try adjusting your filters or wait for teachers to upload marks</p>
-            </div>
+            <EmptyState
+              icon="📊"
+              title="No results found"
+              description="Try adjusting your filters or wait for teachers to upload marks."
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

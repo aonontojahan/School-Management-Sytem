@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
+import { EmptyState } from "../components/ui/EmptyState";
 
 interface Exam { id: number; name: string; exam_type: string; total_marks: number; passing_marks: number; start_date: string | null; end_date: string | null; }
 interface SubjectMark { subject_id: number; subject_name: string; marks_obtained: number; grade: string; gpa_point: number; remarks: string | null; }
@@ -142,25 +143,17 @@ export function StudentResultsPage() {
           </div>
         </div>
       ) : selectedExam ? (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <p className="text-sm font-semibold text-slate-900 mb-1">No results yet</p>
-          <p className="text-xs text-slate-500">Marks for this exam haven't been published yet</p>
-        </div>
+        <EmptyState
+          icon="📊"
+          title="No results yet"
+          description="Marks for this exam haven't been published yet."
+        />
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <p className="text-sm font-semibold text-slate-900 mb-1">Select an exam above</p>
-          <p className="text-xs text-slate-500">Choose an exam to view your results</p>
-        </div>
+        <EmptyState
+          icon="📋"
+          title="Select an exam above"
+          description="Choose an exam to view your results."
+        />
       )}
     </div>
   );

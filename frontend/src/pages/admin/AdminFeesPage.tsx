@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
+import { useToast } from "../../components/ui/Toast";
+import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 
 interface DropdownItem { id: number; name: string; }
 interface FeeType { id: number; name: string; description: string | null; }
@@ -20,12 +22,14 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function AdminFeesPage() {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [showPayForm, setShowPayForm] = useState<number | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("CASH");
   const [bulkForm, setBulkForm] = useState({ class_id: "", fee_type_id: "", total_amount: "", due_date: "" });
   const [filterStatus, setFilterStatus] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const { data: invoices, isLoading } = useQuery({
     queryKey: ["admin-invoices"],
@@ -53,6 +57,10 @@ export function AdminFeesPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
       setShowBulkForm(false);
       setBulkForm({ class_id: "", fee_type_id: "", total_amount: "", due_date: "" });
+      showToast("Invoices generated successfully");
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) => {
+      showToast(e.response?.data?.detail || "Failed to generate invoices", "error");
     },
   });
 
@@ -63,12 +71,22 @@ export function AdminFeesPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
       setShowPayForm(null);
       setPayAmount("");
+      showToast("Payment recorded successfully");
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) => {
+      showToast(e.response?.data?.detail || "Failed to record payment", "error");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => api.delete(`/fees/invoices/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-invoices"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-invoices"] });
+      showToast("Invoice deleted successfully");
+    },
+    onError: (e: { response?: { data?: { detail?: string } } }) => {
+      showToast(e.response?.data?.detail || "Failed to delete invoice", "error");
+    },
   });
 
   const totalPending = invoices?.filter(i => i.status === "PENDING" || i.status === "OVERDUE").reduce((s, i) => s + i.due_amount, 0) || 0;
@@ -375,7 +393,7 @@ export function AdminFeesPage() {
                                 Pay
                               </button>
                             )}
-                            <button onClick={() => { if (confirm("Delete this invoice?")) deleteMutation.mutate(inv.id); }}
+                            <button onClick={() => setDeleteConfirmId(inv.id)}
                               className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition" title="Delete">
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -392,6 +410,21 @@ export function AdminFeesPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => {
+          if (deleteConfirmId !== null) {
+            deleteMutation.mutate(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        title="Delete Invoice"
+        message="Are you sure you want to delete this invoice? This action cannot be undone."
+        confirmLabel="Delete Invoice"
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }
