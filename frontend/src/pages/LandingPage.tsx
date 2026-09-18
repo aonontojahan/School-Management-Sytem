@@ -142,18 +142,18 @@ export function LandingPage() {
           scrollY > 20 ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100" : "bg-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
+            {/* Logo — Left */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-md shadow-indigo-200">
                 S
               </div>
-              <span className="font-extrabold text-slate-900 text-[15px] hidden sm:block">SchoolMS</span>
+              <span className="font-extrabold text-slate-900 text-[15px] hidden sm:block">School Management System</span>
             </Link>
 
-            {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-1">
+            {/* Center Nav (hidden on small screens) */}
+            <div className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.label}
@@ -165,44 +165,45 @@ export function LandingPage() {
               ))}
             </div>
 
-            {/* Desktop CTA */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* CTA — Right */}
+            <div className="flex items-center gap-3">
+              {/* Mobile hamburger */}
+              <button
+                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+
+              {/* Desktop buttons */}
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 transition"
+                className="hidden lg:inline-flex px-4 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 transition"
               >
-                Sign in
+                Login
               </Link>
               <Link
                 to="/login"
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-indigo-200 hover:shadow-md hover:shadow-indigo-300 transition-all duration-200"
+                className="hidden lg:inline-flex px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-indigo-200 hover:shadow-md hover:shadow-indigo-300 transition-all duration-200"
               >
                 Get Started
               </Link>
             </div>
-
-            {/* Mobile hamburger */}
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
-            <div className="px-4 py-4 space-y-1">
+          <div className="lg:hidden bg-white border-b border-slate-200 shadow-lg">
+            <div className="px-6 py-4 space-y-1">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.label}
@@ -219,7 +220,7 @@ export function LandingPage() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition"
                 >
-                  Sign in
+                  Login
                 </Link>
                 <Link
                   to="/login"
@@ -243,7 +244,7 @@ export function LandingPage() {
           <div className="absolute top-40 left-0 w-72 h-72 bg-purple-100 rounded-full blur-3xl opacity-30" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="w-full px-6 sm:px-10 lg:px-14 text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 border border-indigo-200 rounded-full mb-8">
             <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
@@ -295,7 +296,7 @@ export function LandingPage() {
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
       <section id="features" className="py-20 sm:py-28 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           <SectionHeader
             badge="Features"
             title="Everything you need"
@@ -321,7 +322,7 @@ export function LandingPage() {
 
       {/* ── Roles ────────────────────────────────────────────────────────── */}
       <section id="roles" className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           <SectionHeader
             badge="Role-Based Access"
             title="Built for every role"
@@ -352,7 +353,7 @@ export function LandingPage() {
 
       {/* ── How It Works ─────────────────────────────────────────────────── */}
       <section className="py-20 sm:py-28 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           <SectionHeader
             badge="How It Works"
             title="Up and running in minutes"
@@ -378,7 +379,7 @@ export function LandingPage() {
 
       {/* ── About / Tech Stack ───────────────────────────────────────────── */}
       <section id="about" className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-3xl p-8 sm:p-14 text-white overflow-hidden relative">
             {/* Decorative circles */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
@@ -422,7 +423,7 @@ export function LandingPage() {
 
       {/* ── Contact ──────────────────────────────────────────────────────── */}
       <section id="contact" className="py-20 sm:py-28 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           <SectionHeader
             badge="Get in Touch"
             title="Contact us"
@@ -478,7 +479,7 @@ export function LandingPage() {
 
       {/* ── CTA Banner ───────────────────────────────────────────────────── */}
       <section className="py-20 sm:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="w-full px-6 sm:px-10 lg:px-14 text-center">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-10 sm:p-14 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -501,7 +502,7 @@ export function LandingPage() {
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer id="contact" className="border-t border-slate-200 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-10 lg:px-14">
           {/* Main Footer */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 py-14">
             {/* Brand Column */}
