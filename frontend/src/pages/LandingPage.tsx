@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { IMAGES, FEATURE_GALLERY } from "../assets/images";
 import { FeatureModal } from "../components/ui/FeatureModal";
+import { AdmissionForm } from "../components/ui/AdmissionForm";
 
 const FEATURES = [
   {
@@ -114,33 +115,6 @@ const FEATURES = [
   },
 ];
 
-const ROLES = [
-  {
-    role: "Administrator",
-    color: "from-red-500 to-red-600",
-    shadow: "shadow-red-200",
-    items: ["Full system control", "Manage students & teachers", "View all reports & analytics", "Fee & salary management"],
-  },
-  {
-    role: "Teacher",
-    color: "from-emerald-500 to-emerald-600",
-    shadow: "shadow-emerald-200",
-    items: ["Mark daily attendance", "Record exam marks", "Create assignments", "View salary details"],
-  },
-  {
-    role: "Student",
-    color: "from-blue-500 to-blue-600",
-    shadow: "shadow-blue-200",
-    items: ["View class schedule", "Track attendance & grades", "Check fee invoices", "Submit assignments"],
-  },
-  {
-    role: "Guardian",
-    color: "from-amber-500 to-amber-600",
-    shadow: "shadow-amber-200",
-    items: ["Monitor child's attendance", "View academic progress", "Track fee payments", "Receive notifications"],
-  },
-];
-
 const STATS = [
   { value: "500+", label: "Students" },
   { value: "30+", label: "Expert Teachers" },
@@ -159,15 +133,15 @@ const NAV_LINKS = [
 const FOOTER_LINKS = {
   product: [
     { label: "Features", href: "#features" },
-    { label: "Roles", href: "#roles" },
-    { label: "Pricing", href: "#" },
-    { label: "Changelog", href: "#" },
+    { label: "Admission", href: "#admission" },
+    { label: "About", href: "#about" },
+    { label: "Contact", href: "#contact" },
   ],
   resources: [
-    { label: "Documentation", href: "#" },
-    { label: "API Reference", href: "#" },
+    { label: "School Calendar", href: "#" },
+    { label: "Student Portal", href: "#" },
+    { label: "Parent Guide", href: "#" },
     { label: "Support", href: "#contact" },
-    { label: "Status", href: "#" },
   ],
   legal: [
     { label: "Privacy Policy", href: "#" },
@@ -186,16 +160,6 @@ function useScrollY() {
   return y;
 }
 
-function SectionHeader({ badge, title, desc }: { badge: string; title: string; desc?: string }) {
-  return (
-    <div className="text-center mb-14">
-      <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">{badge}</p>
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">{title}</h2>
-      {desc && <p className="mt-3 text-slate-500 max-w-lg mx-auto">{desc}</p>}
-    </div>
-  );
-}
-
 function Icon({ path, className = "w-6 h-6" }: { path: string; className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -208,6 +172,7 @@ export function LandingPage() {
   const scrollY = useScrollY();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState<(typeof FEATURES)[number] | null>(null);
+  const [showAdmissionForm, setShowAdmissionForm] = useState(false);
   const currentYear = new Date().getFullYear();
 
   return (
@@ -475,46 +440,53 @@ export function LandingPage() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 sm:py-28 bg-slate-50">
-        <div className="w-full px-6 sm:px-10 lg:px-14">
-          <SectionHeader
-            badge="Why Choose Us"
-            title="What makes us different"
-            desc="Discover the programs and facilities that make our school a place where students thrive."
-          />
+      <section id="features" className="relative py-20 sm:py-28 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-slate-950">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(99,102,241,0.15),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,rgba(139,92,246,0.1),transparent_60%)]" />
+          <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        </div>
+
+        <div className="relative w-full px-6 sm:px-10 lg:px-14">
+          {/* Header */}
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">What makes us different</h2>
+            <p className="mt-3 text-slate-400 max-w-lg mx-auto">Discover the programs and facilities that make our school a place where students thrive.</p>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
               <button
                 key={f.title}
                 onClick={() => setSelectedFeature(f)}
-                className="relative group rounded-2xl overflow-hidden border border-slate-200 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left"
+                className="relative group rounded-2xl overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300 text-left"
               >
                 {/* Image Header */}
-                <div className="relative h-44 overflow-hidden bg-slate-200">
+                <div className="relative h-44 overflow-hidden bg-slate-800">
                   <img
                     src={f.hero}
                     alt={f.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
                   {/* Icon & Stat Overlay */}
                   <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/20 transition-all duration-300">
                       <Icon path={f.icon} className="w-6 h-6 text-white" />
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-extrabold text-white drop-shadow">{f.stat}</p>
-                      <p className="text-[11px] font-medium text-white/80">{f.statLabel}</p>
+                      <p className="text-2xl font-extrabold text-white drop-shadow-lg">{f.stat}</p>
+                      <p className="text-[11px] font-medium text-white/60">{f.statLabel}</p>
                     </div>
                   </div>
                 </div>
                 {/* Content */}
                 <div className="p-5">
-                  <h3 className="text-lg font-bold text-slate-900 mb-1.5">{f.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed line-clamp-2">{f.desc}</p>
-                  <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 group-hover:gap-2.5 transition-all">
+                  <h3 className="text-lg font-bold text-white mb-1.5">{f.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">{f.desc}</p>
+                  <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-indigo-400 group-hover:text-indigo-300 group-hover:gap-2.5 transition-all">
                     View details
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
@@ -533,68 +505,11 @@ export function LandingPage() {
               { icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4", label: "30+ Expert Teachers" },
               { icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "Established 2005" },
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-3 hover:shadow-md transition-shadow">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
-                  <Icon path={item.icon} className="w-4.5 h-4.5 text-indigo-600" />
+              <div key={item.label} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 px-4 py-3 hover:bg-white/10 transition-all">
+                <div className="w-9 h-9 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                  <Icon path={item.icon} className="w-4.5 h-4.5 text-indigo-400" />
                 </div>
-                <span className="text-xs font-semibold text-slate-700">{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Roles ────────────────────────────────────────────────────────── */}
-      <section id="roles" className="py-20 sm:py-28">
-        <div className="w-full px-6 sm:px-10 lg:px-14">
-          <SectionHeader
-            badge="Role-Based Access"
-            title="Built for every role"
-            desc="Each user sees exactly what they need — no clutter, no confusion."
-          />
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {ROLES.map((r) => (
-              <div key={r.role} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
-                <div className={`bg-gradient-to-r ${r.color} p-5 text-white ${r.shadow} shadow-lg`}>
-                  <h3 className="font-bold text-lg">{r.role}</h3>
-                </div>
-                <ul className="p-5 space-y-3">
-                  {r.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-slate-600">
-                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── How It Works ─────────────────────────────────────────────────── */}
-      <section className="py-20 sm:py-28 bg-slate-50">
-        <div className="w-full px-6 sm:px-10 lg:px-14">
-          <SectionHeader
-            badge="How It Works"
-            title="Up and running in minutes"
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {[
-              { step: "01", title: "Sign In", desc: "Log in with your school credentials. Admins, teachers, students, and guardians each get their own dashboard." },
-              { step: "02", title: "Set Up", desc: "Admins create classes, subjects, and assign teachers. Fee types and salary structures are configured once." },
-              { step: "03", title: "Manage Daily", desc: "Mark attendance, record exam marks, track fees, and generate reports — everything syncs automatically." },
-            ].map((s) => (
-              <div key={s.step} className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-lg mx-auto mb-4 shadow-lg shadow-indigo-200">
-                  {s.step}
-                </div>
-                <h3 className="font-bold text-slate-900 text-lg">{s.title}</h3>
-                <p className="text-sm text-slate-500 mt-2 leading-relaxed">{s.desc}</p>
+                <span className="text-xs font-semibold text-slate-300">{item.label}</span>
               </div>
             ))}
           </div>
@@ -602,107 +517,123 @@ export function LandingPage() {
       </section>
 
       {/* ── About ─────────────────────────────────────────────────────────── */}
-      <section id="about" className="py-20 sm:py-28">
-        <div className="w-full px-6 sm:px-10 lg:px-14">
-          <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-3xl p-8 sm:p-14 text-white overflow-hidden relative">
-            {/* Decorative */}
-            <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            {/* Campus Background Image */}
-            <img
-              src={IMAGES.about.campus}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-[0.08]"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/95 via-indigo-700/90 to-purple-700/95" />
+      <section id="about" className="relative py-24 sm:py-32 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-slate-950">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(99,102,241,0.1),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_100%,rgba(139,92,246,0.06),transparent_50%)]" />
+        </div>
 
-            <div className="relative">
-              {/* Header */}
-              <div className="text-center mb-14">
-                <p className="text-xs font-bold uppercase tracking-widest text-indigo-200 mb-3">Our Story</p>
-                <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight">
-                  A Legacy of Academic Excellence
-                </h2>
+        <div className="relative w-full px-6 sm:px-10 lg:px-14">
+          {/* ── Centered Header ── */}
+          <div className="text-center mb-20">
+            <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-none">
+              About <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Us</span>
+            </h2>
+            <div className="mt-6 w-20 h-1 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full mx-auto" />
+            <p className="mt-8 text-[17px] text-slate-300 max-w-2xl mx-auto leading-[1.8]">
+              Established in 2005, our school has grown from a small institution with 45 students into a thriving community of over 500 learners. We are dedicated to <span className="text-white font-medium">academic excellence</span>, <span className="text-white font-medium">character building</span>, and preparing students for a changing world.
+            </p>
+            <p className="mt-5 text-[15px] text-slate-500 max-w-xl mx-auto leading-[1.8]">
+              With modern facilities, passionate educators, and a curriculum designed for the future, we provide a nurturing environment where every child can discover their strengths and pursue their dreams.
+            </p>
+          </div>
+
+          {/* ── Stats Bar ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/5 rounded-2xl overflow-hidden border border-white/10 mb-20 max-w-5xl mx-auto">
+            {[
+              { value: "500+", label: "Students Enrolled", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
+              { value: "30+", label: "Qualified Teachers", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
+              { value: "95%", label: "Board Pass Rate", icon: "M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" },
+              { value: "5", label: "Classes (5-9)", icon: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" },
+            ].map((s) => (
+              <div key={s.label} className="bg-slate-950 px-6 py-8 text-center group">
+                <Icon path={s.icon} className="w-5 h-5 text-indigo-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                <p className="text-3xl font-black text-white">{s.value}</p>
+                <p className="text-xs font-medium text-slate-500 mt-1">{s.label}</p>
               </div>
+            ))}
+          </div>
 
-              {/* Timeline */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-14">
-                {[
-                  {
-                    year: "2005",
-                    title: "Founded",
-                    desc: "Established by Mr. Rahman Ahmed with a vision to provide quality education to the community. Started with just 3 teachers and 45 students in a small building.",
-                  },
-                  {
-                    year: "2012",
-                    title: "Expansion",
-                    desc: "Expanded to a modern campus with science labs, computer lab, library, and sports facilities. Student body grew to 300+ with 20+ qualified teachers.",
-                  },
-                  {
-                    year: "Today",
-                    title: "Excellence",
-                    desc: "Now serving 500+ students across Classes 5–9. Recognized as one of the top schools in the district with award-winning programs and dedicated faculty.",
-                  },
-                ].map((t) => (
-                  <div key={t.year} className="relative">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-sm font-bold text-white">
-                        {t.year}
-                      </div>
-                      <div className="h-px flex-1 bg-white/20" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-2">{t.title}</h3>
-                    <p className="text-sm text-indigo-100 leading-relaxed">{t.desc}</p>
-                  </div>
-                ))}
+          {/* ── Vision / Mission / Motto ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-20 max-w-6xl mx-auto">
+            {[
+              {
+                title: "Our Vision",
+                desc: "To be a leading institution that empowers students with knowledge, skills, and values to become responsible global citizens who contribute meaningfully to society.",
+                icon: "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z",
+                accent: "from-emerald-500 to-teal-500",
+              },
+              {
+                title: "Our Mission",
+                desc: "To provide a nurturing and stimulating environment where every student discovers their potential, develops critical thinking, and builds a strong foundation for lifelong success.",
+                icon: "M13 10V3L4 14h7v7l9-11h-7z",
+                accent: "from-blue-500 to-indigo-500",
+              },
+              {
+                title: "Our Motto",
+                desc: "Knowledge, Character, Service — We believe education goes beyond textbooks. It shapes character, inspires integrity, and fosters a spirit of service to the community.",
+                icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+                accent: "from-amber-500 to-orange-500",
+              },
+            ].map((item) => (
+              <div key={item.title} className="group bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-7 hover:bg-white/[0.06] transition-all duration-300">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.accent} flex items-center justify-center mb-5 shadow-lg`}>
+                  <Icon path={item.icon} className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
+                <p className="text-sm text-slate-400 leading-[1.75]">{item.desc}</p>
               </div>
+            ))}
+          </div>
 
-              {/* Founder & Motto */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Founder */}
-                <div className="bg-white/10 border border-white/15 rounded-2xl p-6 backdrop-blur-sm">
-                  <div className="flex items-center gap-4 mb-4">
+          {/* ── Founder Card ── */}
+          <div className="max-w-4xl mx-auto">
+            <div className="relative bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-3xl overflow-hidden">
+              {/* Top gradient strip */}
+              <div className="h-1.5 bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500" />
+
+              <div className="p-8 sm:p-12 flex flex-col sm:flex-row items-center gap-10">
+                {/* Photo */}
+                <div className="shrink-0">
+                  <div className="relative">
                     <img
                       src={IMAGES.about.founder}
                       alt="Mr. Rahman Ahmed"
-                      className="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white/20"
+                      className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl object-cover shadow-2xl border border-white/10"
                       loading="lazy"
                     />
-                    <div>
-                      <p className="text-xs font-medium text-indigo-200">Founded By</p>
-                      <h4 className="text-lg font-bold text-white">Mr. Rahman Ahmed</h4>
-                      <p className="text-xs text-indigo-200">Educationist & Visionary Leader</p>
+                    {/* Badge */}
+                    <div className="absolute -bottom-3 -right-3 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-lg shadow-indigo-500/30">
+                      Founder
                     </div>
                   </div>
-                  <p className="text-sm text-indigo-100 leading-relaxed italic">
-                    "Every child deserves the opportunity to learn, grow, and succeed. Our mission is to create an environment where curiosity is nurtured, character is built, and excellence is the standard."
-                  </p>
                 </div>
 
-                {/* Vision & Mission */}
-                <div className="space-y-4">
-                  <div className="bg-white/10 border border-white/15 rounded-2xl p-5 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-400/20 flex items-center justify-center">
-                        <Icon path="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" className="w-4 h-4 text-emerald-300" />
+                {/* Info */}
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-2xl font-black text-white tracking-tight">Mr. Rahman Ahmed</h3>
+                  <p className="text-sm text-indigo-400 font-medium mt-1">Educationist & Visionary Leader</p>
+
+                  <div className="mt-5 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-md bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <Icon path="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" className="w-3.5 h-3.5 text-emerald-400" />
                       </div>
-                      <h4 className="font-bold text-white">Our Vision</h4>
-                    </div>
-                    <p className="text-sm text-indigo-100 leading-relaxed">
-                      To be a leading institution that empowers students with knowledge, skills, and values to become responsible global citizens.
-                    </p>
-                  </div>
-                  <div className="bg-white/10 border border-white/15 rounded-2xl p-5 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-amber-400/20 flex items-center justify-center">
-                        <Icon path="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" className="w-4 h-4 text-amber-300" />
+                      <div>
+                        <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-[0.15em]">Vision</p>
+                        <p className="text-[13px] text-slate-400 leading-[1.75] mt-0.5">To create a learning community where every child is empowered to achieve academic excellence and become a responsible citizen.</p>
                       </div>
-                      <h4 className="font-bold text-white">Our Motto</h4>
                     </div>
-                    <p className="text-sm text-indigo-100 leading-relaxed italic">
-                      "Knowledge, Character, Service" — We believe education goes beyond textbooks. It shapes character and inspires service to society.
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <Icon path="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" className="w-3.5 h-3.5 text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold text-amber-400 uppercase tracking-[0.15em]">Motto</p>
+                        <p className="text-[13px] text-slate-400 leading-[1.75] mt-0.5">"Every child deserves the opportunity to learn, grow, and succeed. We build character, nurture curiosity, and set the standard for excellence."</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -711,247 +642,84 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Admission 2027 ──────────────────────────────────────────────────── */}
-      <section id="admission" className="py-20 sm:py-28 bg-gradient-to-br from-emerald-50 via-white to-blue-50">
-        <div className="w-full px-6 sm:px-10 lg:px-14">
-          <SectionHeader
-            badge="Admission 2027"
-            title="Join Our School Family"
-            desc="Applications are now open for the 2027 academic session. Secure your child's future with quality education."
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Important Dates */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Important Dates</h3>
-              <div className="space-y-4">
-                {[
-                  { date: "Nov 1, 2026", label: "Applications Open" },
-                  { date: "Jan 15, 2027", label: "Application Deadline" },
-                  { date: "Feb 10, 2027", label: "Entrance Exam" },
-                  { date: "Feb 28, 2027", label: "Results Announced" },
-                  { date: "Mar 15, 2027", label: "Session Begins" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.date}</p>
-                      <p className="text-xs text-slate-500">{item.label}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* How to Apply */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">How to Apply</h3>
-              <div className="space-y-4">
-                {[
-                  { step: "01", title: "Collect Form", desc: "Visit the school office or download the admission form from our website" },
-                  { step: "02", title: "Submit Documents", desc: "Submit birth certificate, previous report card, and passport photos" },
-                  { step: "03", title: "Entrance Exam", desc: "Student appears for the entrance exam in English, Math, and Science" },
-                  { step: "04", title: "Interview", desc: "Parent and student interview with the admission committee" },
-                  { step: "05", title: "Enrollment", desc: "Receive offer letter and complete fee payment to confirm seat" },
-                ].map((item) => (
-                  <div key={item.step} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">
-                      {item.step}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                      <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Requirements & Fees */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mb-5">
-                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Requirements & Fees</h3>
-              <div className="space-y-4">
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Eligibility</p>
-                  <ul className="space-y-2">
-                    {["Class 5: Age 10+ by March 2027", "Class 6: Age 11+ by March 2027", "Class 7: Age 12+ by March 2027", "Class 8: Age 13+ by March 2027", "Class 9: Age 14+ by March 2027"].map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-slate-700">
-                        <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Required Documents</p>
-                  <ul className="space-y-2">
-                    {["Birth Certificate", "Previous Report Card", "4 Passport Photos", "Guardian NID Copy", "Transfer Certificate"].map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-slate-700">
-                        <svg className="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              <a
-                href="#contact"
-                className="mt-6 block w-full text-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-sm shadow-emerald-200 transition-all duration-200"
-              >
-                Contact for Details
-              </a>
-            </div>
-          </div>
+      {/* ── Admission ──────────────────────────────────────────────────── */}
+      <section id="admission" className="relative min-h-[calc(100vh-64px)] flex items-center overflow-hidden py-20">
+        {/* Background */}
+        <div className="absolute inset-0 bg-slate-950">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(16,185,129,0.08),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(59,130,246,0.06),transparent_50%)]" />
         </div>
-      </section>
 
-      {/* ── Contact ──────────────────────────────────────────────────────── */}
-      <section id="contact" className="py-20 sm:py-28 bg-slate-50">
-        <div className="w-full px-6 sm:px-10 lg:px-14">
-          <SectionHeader
-            badge="Get in Touch"
-            title="Contact us"
-            desc="Have questions about admissions, programs, or anything else? We'd love to hear from you."
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 max-w-6xl mx-auto">
-            {/* Contact Info Cards */}
-            <div className="lg:col-span-2 space-y-5">
-              {/* Address */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center mb-3">
-                  <Icon path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" className="w-5 h-5 text-indigo-600" />
-                </div>
-                <h4 className="font-bold text-slate-900 mb-1">Our Campus</h4>
-                <p className="text-sm text-slate-500 leading-relaxed">42 Education Avenue, Mirpur-10, Dhaka 1216, Bangladesh</p>
-              </div>
-              {/* Phone */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center mb-3">
-                  <Icon path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" className="w-5 h-5 text-emerald-600" />
-                </div>
-                <h4 className="font-bold text-slate-900 mb-1">Call Us</h4>
-                <p className="text-sm text-slate-500">+880 123 456 789</p>
-                <p className="text-sm text-slate-500">+880 987 654 321</p>
-              </div>
-              {/* Email */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
-                  <Icon path="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" className="w-5 h-5 text-amber-600" />
-                </div>
-                <h4 className="font-bold text-slate-900 mb-1">Email Us</h4>
-                <p className="text-sm text-slate-500">info@schoolms.edu</p>
-                <p className="text-sm text-slate-500">admissions@schoolms.edu</p>
-              </div>
-              {/* Hours */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center mb-3">
-                  <Icon path="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" className="w-5 h-5 text-purple-600" />
-                </div>
-                <h4 className="font-bold text-slate-900 mb-1">Office Hours</h4>
-                <p className="text-sm text-slate-500">Sun – Thu: 8:00 AM – 4:00 PM</p>
-                <p className="text-sm text-slate-500">Fri: 9:00 AM – 12:00 PM</p>
-              </div>
+        <div className="relative w-full px-6 sm:px-10 lg:px-14">
+          <div className="max-w-6xl mx-auto">
+            {/* Centered Heading */}
+            <div className="text-center mb-10">
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none">
+                Admission
+              </h2>
+              <div className="mt-4 w-16 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mx-auto" />
             </div>
 
-            {/* Contact Form */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Send us a Message</h3>
-                <p className="text-sm text-slate-500 mb-6">Fill out the form and we'll get back to you within 24 hours.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Full Name</label>
-                    <input
-                      type="text"
-                      placeholder="John Doe"
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                    />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              {/* Photo Side */}
+              <div className="relative rounded-3xl overflow-hidden group">
+                <img
+                  src={IMAGES.about.campus}
+                  alt="School Campus"
+                  className="w-full h-[340px] lg:h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Admissions Open</span>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="john@school.edu"
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Phone Number</label>
-                    <input
-                      type="tel"
-                      placeholder="+880 123 456 789"
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Subject</label>
-                    <select className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-slate-600">
-                      <option>Admissions Inquiry</option>
-                      <option>Academic Programs</option>
-                      <option>Fee & Payments</option>
-                      <option>General Question</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-5">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Message</label>
-                  <textarea
-                    rows={4}
-                    placeholder="Tell us how we can help..."
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none"
-                  />
-                </div>
-                <div className="mt-6 flex justify-end">
-                  <button className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm shadow-indigo-200 transition-all duration-200 flex items-center gap-2">
-                    Send Message
-                    <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4" />
-                  </button>
+                  <h3 className="text-2xl font-black text-white">Give Your Child the Best Start</h3>
+                  <p className="text-sm text-slate-300 mt-1.5 leading-relaxed">Join 500+ students thriving in academics, sports, and co-curricular activities.</p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-      <section className="py-20 sm:py-28">
-        <div className="w-full px-6 sm:px-10 lg:px-14 text-center">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-10 sm:p-14 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
-            <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-extrabold">Ready to get started?</h2>
-              <p className="mt-4 text-indigo-100 text-lg">Sign in to access your school dashboard.</p>
-              <div className="mt-8">
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-indigo-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              {/* Info Side */}
+              <div className="space-y-4">
+                {/* Stats Row */}
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { value: "500+", label: "Students", color: "text-emerald-400" },
+                    { value: "30+", label: "Teachers", color: "text-blue-400" },
+                    { value: "95%", label: "Pass Rate", color: "text-violet-400" },
+                    { value: "20+", label: "Years", color: "text-amber-400" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-3 text-center">
+                      <p className={`text-xl font-black ${stat.color}`}>{stat.value}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5 font-medium">{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Info Bullets */}
+                <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-4 space-y-3">
+                  {[
+                    { icon: "M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342", text: "Classes 5 to 9 with English medium curriculum" },
+                    { icon: "M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z", text: "Merit & need-based scholarships available" },
+                    { icon: "M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z", text: "Safe campus with modern facilities" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <Icon path={item.icon} className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
+                      <p className="text-sm text-slate-300">{item.text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Apply Button */}
+                <button
+                  onClick={() => setShowAdmissionForm(true)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all duration-200"
                 >
-                  Sign in to Dashboard
-                  <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4" />
-                </Link>
+                  Apply Now
+                  <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
@@ -1027,16 +795,20 @@ export function LandingPage() {
               <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Contact</h4>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2.5">
-                  <Icon path="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                  <span className="text-sm text-slate-400">info@schoolms.edu</span>
+                  <Icon path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-slate-400">42 Education Avenue, Mirpur-10, Dhaka 1216</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Icon path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <Icon path="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
                   <span className="text-sm text-slate-400">+880 123 456 789</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <Icon path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
-                  <span className="text-sm text-slate-400">42 Education Avenue, Mirpur-10, Dhaka</span>
+                  <Icon path="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-slate-400">info@schoolms.edu</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Icon path="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-slate-400">Sun – Thu: 8AM – 4PM</span>
                 </li>
               </ul>
             </div>
@@ -1070,6 +842,19 @@ export function LandingPage() {
         stat={selectedFeature?.stat ?? ""}
         statLabel={selectedFeature?.statLabel ?? ""}
       />
+
+      {/* ── Admission Form Modal ──────────────────────────────────────────── */}
+      {showAdmissionForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8" onClick={() => setShowAdmissionForm(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative w-full h-[85vh] bg-slate-950 border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AdmissionForm onClose={() => setShowAdmissionForm(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

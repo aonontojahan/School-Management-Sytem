@@ -25,6 +25,7 @@ import { AdminSalaryPage } from "./pages/admin/AdminSalaryPage";
 import { AdminReportsPage } from "./pages/admin/AdminReportsPage";
 import { AdminResultsPage } from "./pages/admin/AdminResultsPage";
 import { AdminAttendancePage } from "./pages/admin/AdminAttendancePage";
+import { AdminAdmissionsPage } from "./pages/admin/AdminAdmissionsPage";
 import { StudentExamsPage } from "./pages/StudentExamsPage";
 import { StudentExamRoutinePage } from "./pages/StudentExamRoutinePage";
 import { StudentFeesPage } from "./pages/StudentFeesPage";
@@ -137,6 +138,7 @@ export default function App() {
         <Route path="/fees" element={<Shelled roles={["ADMIN", "STUDENT"]}><FeesRouter /></Shelled>} />
         <Route path="/salary" element={<Shelled roles={["ADMIN", "TEACHER"]}><SalaryRouter /></Shelled>} />
         <Route path="/reports" element={<Shelled roles={["ADMIN"]}><AdminReportsPage /></Shelled>} />
+        <Route path="/admin/admissions" element={<Shelled roles={["ADMIN"]}><AdminAdmissionsPage /></Shelled>} />
         <Route path="/assignments" element={<Shelled><AssignmentsRouter /></Shelled>} />
         <Route path="/notice" element={<Shelled roles={["STUDENT"]}><StudentNoticePage /></Shelled>} />
         <Route path="/my-profile" element={<Shelled roles={["STUDENT"]}><StudentProfilePage /></Shelled>} />
