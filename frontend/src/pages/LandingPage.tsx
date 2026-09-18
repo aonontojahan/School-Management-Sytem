@@ -74,6 +74,33 @@ const STATS = [
   { value: "24/7", label: "Access" },
 ];
 
+const NAV_LINKS = [
+  { label: "Home", href: "#home" },
+  { label: "Features", href: "#features" },
+  { label: "About", href: "#about" },
+  { label: "Contact", href: "#contact" },
+];
+
+const FOOTER_LINKS = {
+  product: [
+    { label: "Features", href: "#features" },
+    { label: "Roles", href: "#roles" },
+    { label: "Pricing", href: "#" },
+    { label: "Changelog", href: "#" },
+  ],
+  resources: [
+    { label: "Documentation", href: "#" },
+    { label: "API Reference", href: "#" },
+    { label: "Support", href: "#contact" },
+    { label: "Status", href: "#" },
+  ],
+  legal: [
+    { label: "Privacy Policy", href: "#" },
+    { label: "Terms of Service", href: "#" },
+    { label: "Cookie Policy", href: "#" },
+  ],
+};
+
 function useScrollY() {
   const [y, setY] = useState(0);
   useEffect(() => {
@@ -84,16 +111,35 @@ function useScrollY() {
   return y;
 }
 
+function SectionHeader({ badge, title, desc }: { badge: string; title: string; desc?: string }) {
+  return (
+    <div className="text-center mb-14">
+      <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">{badge}</p>
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">{title}</h2>
+      {desc && <p className="mt-3 text-slate-500 max-w-lg mx-auto">{desc}</p>}
+    </div>
+  );
+}
+
+function Icon({ path, className = "w-6 h-6" }: { path: string; className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d={path} />
+    </svg>
+  );
+}
+
 export function LandingPage() {
   const scrollY = useScrollY();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans">
       {/* ── Navbar ───────────────────────────────────────────────────────── */}
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrollY > 20 ? "bg-white/90 backdrop-blur-xl shadow-sm border-b border-slate-100" : "bg-transparent"
+          scrollY > 20 ? "bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100" : "bg-transparent"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -103,14 +149,20 @@ export function LandingPage() {
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-black text-sm shadow-md shadow-indigo-200">
                 S
               </div>
-              <span className="font-extrabold text-slate-900 text-[15px] hidden sm:block">School Management System</span>
+              <span className="font-extrabold text-slate-900 text-[15px] hidden sm:block">SchoolMS</span>
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition">Features</a>
-              <a href="#roles" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition">Roles</a>
-              <a href="#about" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition">About</a>
+            <div className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
 
             {/* Desktop CTA */}
@@ -123,7 +175,7 @@ export function LandingPage() {
               </Link>
               <Link
                 to="/login"
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm shadow-indigo-200 transition"
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm shadow-indigo-200 hover:shadow-md hover:shadow-indigo-300 transition-all duration-200"
               >
                 Get Started
               </Link>
@@ -150,13 +202,32 @@ export function LandingPage() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
-            <div className="px-4 py-4 space-y-2">
-              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">Features</a>
-              <a href="#roles" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">Roles</a>
-              <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">About</a>
-              <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition">Sign in</Link>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition">Get Started</Link>
+            <div className="px-4 py-4 space-y-1">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="pt-3 mt-3 border-t border-slate-100 flex flex-col gap-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50 transition"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                >
+                  Get Started
+                </Link>
               </div>
             </div>
           </div>
@@ -164,7 +235,7 @@ export function LandingPage() {
       </nav>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 overflow-hidden">
+      <section id="home" className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-b from-indigo-50 via-white to-white rounded-full blur-3xl opacity-70" />
@@ -197,13 +268,14 @@ export function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/login"
-              className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 transition-all text-center"
+              className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 transition-all duration-200 text-center flex items-center justify-center gap-2"
             >
               Sign in to Dashboard
+              <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4" />
             </Link>
             <a
               href="#features"
-              className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all text-center"
+              className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-center"
             >
               Explore Features
             </a>
@@ -224,11 +296,11 @@ export function LandingPage() {
       {/* ── Features ─────────────────────────────────────────────────────── */}
       <section id="features" className="py-20 sm:py-28 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">Features</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">Everything you need</h2>
-            <p className="mt-3 text-slate-500 max-w-lg mx-auto">A complete toolkit to run your school efficiently — from daily roll calls to annual reports.</p>
-          </div>
+          <SectionHeader
+            badge="Features"
+            title="Everything you need"
+            desc="A complete toolkit to run your school efficiently — from daily roll calls to annual reports."
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
@@ -237,9 +309,7 @@ export function LandingPage() {
                 className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group"
               >
                 <div className={`w-12 h-12 rounded-xl ${f.color} border flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d={f.icon} />
-                  </svg>
+                  <Icon path={f.icon} />
                 </div>
                 <h3 className="font-bold text-slate-900">{f.title}</h3>
                 <p className="text-sm text-slate-500 mt-2 leading-relaxed">{f.desc}</p>
@@ -252,15 +322,15 @@ export function LandingPage() {
       {/* ── Roles ────────────────────────────────────────────────────────── */}
       <section id="roles" className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">Role-Based Access</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">Built for every role</h2>
-            <p className="mt-3 text-slate-500 max-w-lg mx-auto">Each user sees exactly what they need — no clutter, no confusion.</p>
-          </div>
+          <SectionHeader
+            badge="Role-Based Access"
+            title="Built for every role"
+            desc="Each user sees exactly what they need — no clutter, no confusion."
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {ROLES.map((r) => (
-              <div key={r.role} className={`bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200`}>
+              <div key={r.role} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
                 <div className={`bg-gradient-to-r ${r.color} p-5 text-white ${r.shadow} shadow-lg`}>
                   <h3 className="font-bold text-lg">{r.role}</h3>
                 </div>
@@ -283,10 +353,10 @@ export function LandingPage() {
       {/* ── How It Works ─────────────────────────────────────────────────── */}
       <section className="py-20 sm:py-28 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-3">How It Works</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">Up and running in minutes</h2>
-          </div>
+          <SectionHeader
+            badge="How It Works"
+            title="Up and running in minutes"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
@@ -340,9 +410,7 @@ export function LandingPage() {
                   { icon: "M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9", label: "Real-time in-app notifications" },
                 ].map((t) => (
                   <div key={t.label} className="flex items-center gap-3 bg-white/10 border border-white/10 rounded-xl px-4 py-3">
-                    <svg className="w-5 h-5 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={t.icon} />
-                    </svg>
+                    <Icon path={t.icon} className="w-5 h-5 text-emerald-300 shrink-0" />
                     <span className="text-sm text-white/90">{t.label}</span>
                   </div>
                 ))}
@@ -352,36 +420,181 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* ── Contact ──────────────────────────────────────────────────────── */}
+      <section id="contact" className="py-20 sm:py-28 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHeader
+            badge="Get in Touch"
+            title="Contact us"
+            desc="Have questions? We'd love to hear from you."
+          />
+
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="john@school.edu"
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  />
+                </div>
+              </div>
+              <div className="mt-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Subject</label>
+                <input
+                  type="text"
+                  placeholder="How can we help?"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                />
+              </div>
+              <div className="mt-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Message</label>
+                <textarea
+                  rows={4}
+                  placeholder="Tell us more about your inquiry..."
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-none"
+                />
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm shadow-indigo-200 transition-all duration-200 flex items-center gap-2">
+                  Send Message
+                  <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-      <section className="py-20 sm:py-28 bg-slate-50">
+      <section className="py-20 sm:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">Ready to get started?</h2>
-          <p className="mt-4 text-slate-500 text-lg">Sign in to access your school dashboard.</p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/login"
-              className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl transition-all"
-            >
-              Sign in to Dashboard
-            </Link>
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-10 sm:p-14 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="relative">
+              <h2 className="text-3xl sm:text-4xl font-extrabold">Ready to get started?</h2>
+              <p className="mt-4 text-indigo-100 text-lg">Sign in to access your school dashboard.</p>
+              <div className="mt-8">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-indigo-700 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Sign in to Dashboard
+                  <Icon path="M13 7l5 5m0 0l-5 5m5-5H6" className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex items-center justify-center font-black text-xs">S</div>
-              <span className="font-bold text-slate-900 text-sm">School Management System</span>
+      <footer id="contact" className="border-t border-slate-200 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Main Footer */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 py-14">
+            {/* Brand Column */}
+            <div className="lg:col-span-2">
+              <Link to="/" className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-indigo-900/30">
+                  S
+                </div>
+                <span className="font-extrabold text-white text-lg">SchoolMS</span>
+              </Link>
+              <p className="mt-4 text-sm text-slate-400 leading-relaxed max-w-sm">
+                A comprehensive school management platform for administrators, teachers, students, and guardians.
+                Streamline your school operations with modern technology.
+              </p>
+              <div className="mt-5 flex items-center gap-3">
+                {/* Social Icons */}
+                {[
+                  { label: "Facebook", path: "M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" },
+                  { label: "Twitter", path: "M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" },
+                  { label: "GitHub", path: "M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" },
+                ].map((social) => (
+                  <a
+                    key={social.label}
+                    href="#"
+                    className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                    title={social.label}
+                  >
+                    <Icon path={social.path} className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
             </div>
+
+            {/* Product Links */}
+            <div>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Product</h4>
+              <ul className="space-y-3">
+                {FOOTER_LINKS.product.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Resources Links */}
+            <div>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Resources</h4>
+              <ul className="space-y-3">
+                {FOOTER_LINKS.resources.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="text-sm text-slate-400 hover:text-white transition-colors">
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact Info */}
+            <div>
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Contact</h4>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-2.5">
+                  <Icon path="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-slate-400">admin@schoolms.com</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Icon path="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-slate-400">+880 123 456 789</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <Icon path="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                  <span className="text-sm text-slate-400">Dhaka, Bangladesh</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-white/10 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-slate-500">
+              &copy; {currentYear} School Management System. All rights reserved.
+            </p>
             <div className="flex items-center gap-6">
-              <a href="#features" className="text-sm text-slate-500 hover:text-indigo-600 transition">Features</a>
-              <a href="#roles" className="text-sm text-slate-500 hover:text-indigo-600 transition">Roles</a>
-              <a href="#about" className="text-sm text-slate-500 hover:text-indigo-600 transition">About</a>
+              {FOOTER_LINKS.legal.map((link) => (
+                <a key={link.label} href={link.href} className="text-xs text-slate-500 hover:text-white transition-colors">
+                  {link.label}
+                </a>
+              ))}
             </div>
-            <p className="text-xs text-slate-400">&copy; {new Date().getFullYear()} School Management System</p>
           </div>
         </div>
       </footer>
