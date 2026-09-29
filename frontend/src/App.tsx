@@ -4,6 +4,12 @@ import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { Layout } from "./components/Layout";
 import { Login } from "./pages/Login";
 import { LandingPage } from "./pages/LandingPage";
+import { AboutPage } from "./pages/AboutPage";
+import { AcademicsPage } from "./pages/AcademicsPage";
+import { AdmissionPage } from "./pages/AdmissionPage";
+import { FacilitiesPage } from "./pages/FacilitiesPage";
+import { NoticesPage } from "./pages/NoticesPage";
+import { ContactPage } from "./pages/ContactPage";
 import { Dashboard } from "./pages/Dashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { StudentDashboard } from "./pages/StudentDashboard";
@@ -121,6 +127,12 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/" element={<HomeRouter />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/academics" element={<AcademicsPage />} />
+        <Route path="/admission" element={<AdmissionPage />} />
+        <Route path="/facilities" element={<FacilitiesPage />} />
+        <Route path="/notices" element={<NoticesPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/search" element={<Shelled><SearchPage /></Shelled>} />
         <Route path="/admin/dashboard" element={<Shelled roles={["ADMIN"]}><AdminDashboard /></Shelled>} />
