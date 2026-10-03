@@ -80,27 +80,6 @@ const PROGRAMS = [
   },
 ];
 
-const PORTALS = [
-  {
-    id: "students",
-    label: "Students",
-    icon: "M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342",
-    points: ["Class routine & assignments", "Exam results & admit cards", "Fees, notices & study materials"],
-  },
-  {
-    id: "teachers",
-    label: "Teachers",
-    icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
-    points: ["One-click attendance & marks entry", "Salary slips & leave application", "Routines, notices & exam duties"],
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z",
-    points: ["Manage students, teachers & classes", "Fees, salaries & reports in one place", "Publish notices, routines & results"],
-  },
-];
-
 function Icon({ path, className = "w-6 h-6" }: { path: string; className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -130,7 +109,6 @@ function ArrowIcon({ className = "w-4 h-4" }: { className?: string }) {
 
 export function LandingPage() {
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
-  const [activePortal, setActivePortal] = useState(PORTALS[0]);
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-700 scroll-smooth">
@@ -341,74 +319,6 @@ export function LandingPage() {
           <Link to="/facilities" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-bold transition">
             Explore All Facilities <ArrowIcon />
           </Link>
-        </div>
-      </section>
-
-      {/* ── Portal strip ─────────────────────────────────────────────────── */}
-      <section className="w-full px-6 sm:px-10 lg:px-14 py-16 sm:py-20 bg-sky-50/70 border-y border-sky-100">
-        <SectionHead
-          title="One Website for the Whole School"
-          sub="Admin manages everything from one dashboard, students get routines and results, teachers finish attendance in one click."
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch max-w-6xl mx-auto">
-          <div className="rounded-3xl bg-white border border-slate-100 shadow-sm p-8 flex flex-col">
-            <div className="flex flex-wrap justify-center gap-2">
-              {PORTALS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setActivePortal(p)}
-                  className={`px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
-                    activePortal.id === p.id
-                      ? "bg-blue-950 text-white border-blue-950 shadow-md"
-                      : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-sky-50"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-            <ul className="mt-6 space-y-3 max-w-md mx-auto w-full">
-              {activePortal.points.map((pt) => (
-                <li key={pt} className="flex items-center gap-3 text-slate-700 font-medium text-[15px]">
-                  <span className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  {pt}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-auto pt-7 text-center">
-              <Link to="/login" className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-amber-400 hover:bg-amber-500 text-blue-950 text-sm font-bold transition">
-                Try Portal Login <ArrowIcon />
-              </Link>
-            </div>
-          </div>
-          <div className="rounded-3xl bg-blue-950 p-8 text-white flex flex-col">
-            <div className="flex items-center gap-2 mb-5">
-              <span className="w-3 h-3 rounded-full bg-red-400" />
-              <span className="w-3 h-3 rounded-full bg-amber-400" />
-              <span className="w-3 h-3 rounded-full bg-emerald-400" />
-              <span className="ml-2 text-xs text-white/50 font-medium">{activePortal.label} Dashboard — Preview</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { v: "98%", l: "Attendance", c: "text-emerald-300" },
-                { v: "Paid", l: "Jan Fees", c: "text-amber-300" },
-                { v: "A+", l: "Math Result", c: "text-sky-300" },
-                { v: "8AM", l: "Class Routine", c: "text-violet-300" },
-              ].map((m) => (
-                <div key={m.l} className="rounded-2xl bg-white/5 border border-white/10 p-5 text-center">
-                  <p className={`text-2xl font-black ${m.c}`}>{m.v}</p>
-                  <p className="text-xs text-white/50 mt-1">{m.l}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-auto pt-6 text-sm text-white/60 text-center">
-              Live attendance, online fees, results and notices — all in one place.
-            </p>
-          </div>
         </div>
       </section>
 

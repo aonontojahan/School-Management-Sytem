@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SiteNavbar } from "../components/SiteNavbar";
-import { PageFooter } from "../components/PageFooter";
+import { MiniFooter } from "../components/PageFooter";
 import { NOTICES } from "../data/school";
 import { FEATURE_GALLERY } from "../assets/images";
 
@@ -97,7 +97,7 @@ export function NoticesPage() {
         </div>
       </section>
 
-      <PageFooter />
+      <MiniFooter />
     </div>
   );
 }

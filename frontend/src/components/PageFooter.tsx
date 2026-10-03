@@ -14,6 +14,18 @@ const RESOURCES = [
   { label: "Home", to: "/" },
 ];
 
+/** Slim centered copyright strip shown at the bottom of every inner page. */
+export function MiniFooter() {
+  const currentYear = new Date().getFullYear();
+  return (
+    <footer className="border-t border-slate-100 bg-white">
+      <p className="text-center text-xs text-slate-400 py-5 px-4">
+        &copy; {currentYear} Little Star School, Bhendabari, Pirgonj, Rangpur. All rights reserved.
+      </p>
+    </footer>
+  );
+}
+
 /** Light official footer shared by the inner pages (About, Academics, Admission, Facilities, Notices, Contact). */
 export function PageFooter() {
   const currentYear = new Date().getFullYear();

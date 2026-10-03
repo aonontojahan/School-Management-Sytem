@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteNavbar } from "../components/SiteNavbar";
-import { PageFooter } from "../components/PageFooter";
+import { MiniFooter } from "../components/PageFooter";
 import { CONTACT_CARDS, FAQS } from "../data/school";
 import { IMAGES } from "../assets/images";
 
@@ -231,7 +231,7 @@ export function ContactPage() {
         </div>
       </section>
 
-      <PageFooter />
+      <MiniFooter />
     </div>
   );
 }

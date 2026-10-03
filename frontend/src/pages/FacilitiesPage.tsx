@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteNavbar } from "../components/SiteNavbar";
-import { PageFooter } from "../components/PageFooter";
+import { MiniFooter } from "../components/PageFooter";
 import { FeatureModal } from "../components/ui/FeatureModal";
 import { FEATURES } from "../data/school";
 import { FEATURE_GALLERY } from "../assets/images";
@@ -108,7 +108,7 @@ export function FacilitiesPage() {
         </div>
       </section>
 
-      <PageFooter />
+      <MiniFooter />
 
       <FeatureModal
         open={selected !== null}

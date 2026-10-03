@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteNavbar } from "../components/SiteNavbar";
-import { PageFooter } from "../components/PageFooter";
+import { MiniFooter } from "../components/PageFooter";
 import { AdmissionForm } from "../components/ui/AdmissionForm";
 import { ADMISSION_STEPS } from "../data/school";
 import { IMAGES } from "../assets/images";
@@ -153,7 +153,7 @@ export function AdmissionPage() {
         ))}
       </section>
 
-      <PageFooter />
+      <MiniFooter />
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8" onClick={() => setShowForm(false)}>

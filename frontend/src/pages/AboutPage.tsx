@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { IMAGES, FEATURE_GALLERY } from "../assets/images";
 import { SiteNavbar } from "../components/SiteNavbar";
+import { MiniFooter } from "../components/PageFooter";
 
 function Icon({ path, className = "w-6 h-6" }: { path: string; className?: string }) {
   return (
@@ -85,7 +86,7 @@ export function AboutPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  const currentYear = new Date().getFullYear();
+
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-700 scroll-smooth">
@@ -376,17 +377,8 @@ export function AboutPage() {
             </div>
           </div>
         </div>
-        <div className="relative border-t border-white/10">
-          <div className="w-full px-6 sm:px-10 lg:px-14 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-white/50">&copy; {currentYear} Little Star School, Bhendabari, Pirgonj, Rangpur. All rights reserved.</p>
-            <div className="flex items-center gap-5 text-xs text-white/50">
-              <a href="/#programs" className="hover:text-white transition">Programs</a>
-              <a href="/#admission" className="hover:text-white transition">Admission</a>
-              <a href="/#contact" className="hover:text-white transition">Contact</a>
-            </div>
-          </div>
-        </div>
       </section>
+      <MiniFooter />
     </div>
   );
 }
