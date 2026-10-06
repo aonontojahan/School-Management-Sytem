@@ -34,7 +34,7 @@ Grading bands are computed server-side: 80+ A+, 70–79 A, 60–69 A-,
 ```bash
 cd backend
 
-# Virtual environment (already exists as .venv — create only if missing)
+# Virtual environment (already exists as .venv no need to create — create only if missing)
 python -m venv .venv
 source .venv/Scripts/activate
 pip install -r requirements.txt
